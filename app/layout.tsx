@@ -3,8 +3,14 @@ import { Providers } from "./providers";
 import { Toaster } from "sonner";
 import "./globals.css";
 
+const baseUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  : process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : "http://localhost:3000";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://tiktok-trend-yvb5.vercel.app"),
+  metadataBase: new URL(baseUrl),
   title: "TikTok Trend Analytics",
   description: "TikTok analytics and ML insight dashboard",
   icons: {
@@ -15,7 +21,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "TikTok Trend Analytics",
     description: "TikTok analytics and ML insight dashboard",
-    url: "https://tiktok-trend-yvb5.vercel.app",
+    url: baseUrl,
     siteName: "TikTok Trend Analytics",
     images: [
       {
