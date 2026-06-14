@@ -4,7 +4,9 @@ import type { ApiResponse } from "./types";
 import { API_ENDPOINTS } from "./endpoints";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+  process.env.NEXT_PUBLIC_API_BASE_URL !== undefined
+    ? process.env.NEXT_PUBLIC_API_BASE_URL
+    : "";
 
 type ApiFetchOptions = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -17,7 +19,8 @@ type ApiFetchOptions = {
 
 function buildUrl(path: string) {
   if (path.startsWith("http")) return path;
-  return `${API_BASE_URL}${path}`;
+  const base = API_BASE_URL === "/" ? "" : API_BASE_URL;
+  return `${base}${path}`;
 }
 
 export async function apiFetch<T>(
