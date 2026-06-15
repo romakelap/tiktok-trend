@@ -30,7 +30,21 @@ export function AppSidebar({
     apiFetch<any>(API_ENDPOINTS.dashboard.summary)
       .then((res) => {
         if (active && res?.success && res.data?.latestSnapshotAt) {
-          const date = new Date(res.data.latestSnapshotAt);
+          const rawDate = res.data.latestSnapshotAt;
+          let date: Date;
+
+          if (typeof rawDate === "string") {
+            // Treat the ISO date-time string as UTC
+            const utcStr = rawDate.endsWith("Z") || rawDate.includes("+") ? rawDate : `${rawDate}Z`;
+            date = new Date(utcStr);
+          } else if (Array.isArray(rawDate)) {
+            // Treat the Jackson array representation [YYYY, MM, DD, HH, mm, ss] as UTC
+            const [year, month, day, hour, minute, second] = rawDate;
+            date = new Date(Date.UTC(year, month - 1, day, hour, minute, second || 0));
+          } else {
+            date = new Date(rawDate);
+          }
+
           const formatted = date.toLocaleString("id-ID", {
             day: "numeric",
             month: "short",
