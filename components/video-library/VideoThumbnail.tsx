@@ -30,6 +30,7 @@ export function VideoThumbnail({
   duration,
   status,
   size = 'md',
+  coverUrl,
   videoUrl,
   children = null,
 }: VideoThumbnailProps) {
@@ -42,14 +43,23 @@ export function VideoThumbnail({
   const iconSize = { sm: 'w-7 h-7', md: 'w-10 h-10', lg: 'w-14 h-14' };
 
   const videoId = extractTikTokVideoId(videoUrl);
+  const [imageError, setImageError] = React.useState(false);
 
   return (
     <div className={`relative ${heights[size]} overflow-hidden rounded-t-2xl flex items-center justify-center group/thumb`}
       style={{
         background: `linear-gradient(135deg, ${cat.grad[0]}, ${cat.grad[1]})`,
       }}>
-      {/* TikTok iframe cover — loads lazily once visible */}
-      {videoId ? (
+      {/* Use proxied cover image if available, falling back to TikTokEmbed or icon gradient */}
+      {coverUrl && !imageError ? (
+        <img
+          src={`/api/tiktok-image?url=${encodeURIComponent(coverUrl)}`}
+          alt="Video Cover"
+          referrerPolicy="no-referrer"
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover/thumb:scale-105"
+          onError={() => setImageError(true)}
+        />
+      ) : videoId ? (
         <TikTokEmbed videoId={videoId} mode="player" lazy passThroughClicks />
       ) : (
         // Texture + category icon fallback when no video id is available
