@@ -1,8 +1,5 @@
-"use client";
-
 import { useMemo, useState } from "react";
-import { Hash, Info } from "lucide-react";
-import { TOKENS } from "@/lib/design-tokens";
+import { Info, Share2 } from "lucide-react";
 
 interface Node {
   id: string;
@@ -93,19 +90,19 @@ export function HashtagNetwork({ data, loading = false }: HashtagNetworkProps) {
 
   const getEdgeWidth = (weight: number) => {
     const minW = 1.5;
-    const maxW = 7;
+    const maxW = 6;
     return minW + (weight / maxWeight) * (maxW - minW);
   };
 
   const getEdgeOpacity = (edge: Edge) => {
     if (hoveredNode) {
       if (edge.source === hoveredNode || edge.target === hoveredNode) {
-        return 0.85;
+        return 0.9;
       }
-      return 0.08;
+      return 0.06;
     }
     const minO = 0.15;
-    const maxO = 0.6;
+    const maxO = 0.65;
     return minO + (edge.weight / maxWeight) * (maxO - minO);
   };
 
@@ -117,55 +114,50 @@ export function HashtagNetwork({ data, loading = false }: HashtagNetworkProps) {
   };
 
   return (
-    <div
-      className="relative rounded-2xl overflow-hidden"
-      style={{
-        background: TOKENS.card,
-        border: `1px solid ${TOKENS.cardBorder}`,
-        boxShadow: "0 4px 24px rgba(0,0,0,0.02)",
-      }}
-    >
+    <div className="rounded-2xl bg-white dark:bg-neutral-900 border border-stone-200/80 dark:border-neutral-800 shadow-2xs overflow-hidden">
       <div className="p-6">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-purple-500/10 border border-purple-500/20">
-              <Hash className="w-5 h-5 text-purple-500" />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-stone-900 dark:bg-white text-white dark:text-stone-900 shadow-sm">
+              <Share2 className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-black text-sm tracking-tight" style={{ color: TOKENS.text }}>
-                Hashtag Co-occurrence Network Graph
+              <h3 className="font-black text-base text-stone-900 dark:text-white">
+                Hashtag Co-occurrence Network
               </h3>
-              <p className="text-[11px]" style={{ color: TOKENS.textMuted }}>
-                Jaringan relasi antar hashtag berdasarkan frekuensi penggunaan bersama dalam video yang sama
+              <p className="text-xs text-stone-500 dark:text-neutral-400">
+                Peta visual relasi penggunaan bersama antar hashtag dalam satu video
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-md">
-            <Info className="w-3.5 h-3.5 text-zinc-400" />
-            Hover node untuk melihat relasi terhubung
+          <div className="flex items-center gap-1.5 text-[11px] font-medium text-stone-500 dark:text-neutral-400 bg-stone-100 dark:bg-neutral-800 px-3 py-1.5 rounded-xl border border-stone-200/60 dark:border-neutral-700">
+            <Info className="w-3.5 h-3.5 text-stone-400" />
+            Hover node / relasi untuk melihat metrik
           </div>
         </div>
 
         {loading ? (
-          <div className="h-[520px] flex items-center justify-center text-xs font-bold" style={{ color: TOKENS.textMuted }}>
-            Membangun graf jaringan hashtag...
+          <div className="h-[480px] flex flex-col items-center justify-center gap-2 text-xs font-bold text-stone-400 dark:text-neutral-500">
+            <div className="w-6 h-6 rounded-full border-2 border-stone-900 dark:border-white border-t-transparent animate-spin" />
+            <span>Membangun graf jaringan relasi...</span>
           </div>
         ) : positionedNodes.length === 0 ? (
-          <div className="h-[520px] flex items-center justify-center text-xs font-semibold text-center leading-relaxed" style={{ color: TOKENS.textMuted }}>
-            Tidak ada relasi hashtag yang ditemukan.<br />
-            Pastikan video Anda memiliki beberapa hashtag di dalamnya.
+          <div className="h-[480px] flex flex-col items-center justify-center text-xs text-center text-stone-400 dark:text-neutral-500 p-8 rounded-xl bg-stone-50 dark:bg-neutral-850 border border-dashed border-stone-200 dark:border-neutral-800">
+            <Share2 className="w-8 h-8 mb-2 opacity-40" />
+            <p className="font-bold text-stone-600 dark:text-neutral-400">Tidak ada relasi hashtag yang ditemukan</p>
+            <p className="mt-1">Pastikan video memiliki minimal dua hashtag di dalam caption.</p>
           </div>
         ) : (
           <div className="flex flex-col lg:flex-row gap-6 items-center">
             {/* SVG Network Canvas */}
-            <div className="relative bg-zinc-950 dark:bg-black/35 rounded-xl border border-zinc-200 dark:border-zinc-800/80 p-2 overflow-hidden flex-1 w-full flex justify-center">
+            <div className="relative bg-stone-900 dark:bg-black/50 rounded-2xl border border-stone-800 p-3 overflow-hidden flex-1 w-full flex justify-center shadow-inner">
               <svg
                 viewBox="0 0 600 500"
                 width="100%"
                 height="100%"
-                className="max-h-[500px]"
+                className="max-h-[480px]"
                 style={{ overflow: "visible" }}
               >
                 {/* 1. Draw Edges */}
@@ -184,7 +176,7 @@ export function HashtagNetwork({ data, loading = false }: HashtagNetworkProps) {
                         y1={sourceNode.y}
                         x2={targetNode.x}
                         y2={targetNode.y}
-                        stroke={isHovered ? "#a855f7" : "rgba(168, 85, 247, 0.4)"}
+                        stroke={isHovered ? "#38bdf8" : "rgba(148, 163, 184, 0.45)"}
                         strokeWidth={getEdgeWidth(edge.weight)}
                         strokeOpacity={getEdgeOpacity(edge)}
                         className="transition-all duration-200"
@@ -212,14 +204,14 @@ export function HashtagNetwork({ data, loading = false }: HashtagNetworkProps) {
                         onMouseEnter={() => setHoveredNode(node.id)}
                         onMouseLeave={() => setHoveredNode(null)}
                       >
-                        {/* Outer glow ring for hovered node */}
+                        {/* Outer pulse ring for hovered node */}
                         {isHovered && (
                           <circle
                             r={radius + 6}
                             fill="none"
-                            stroke="#ec4899"
+                            stroke="#38bdf8"
                             strokeWidth={2}
-                            strokeOpacity={0.6}
+                            strokeOpacity={0.8}
                             className="animate-ping"
                           />
                         )}
@@ -227,24 +219,24 @@ export function HashtagNetwork({ data, loading = false }: HashtagNetworkProps) {
                         {/* Node circle */}
                         <circle
                           r={radius}
-                          fill={isHovered ? "#ec4899" : "#a855f7"}
-                          stroke="#ffffff"
+                          fill={isHovered ? "#38bdf8" : "#f8fafc"}
+                          stroke={isHovered ? "#ffffff" : "#0f172a"}
                           strokeWidth={2}
                           style={{
-                            filter: isHovered ? "drop-shadow(0 0 8px #ec4899)" : "none",
+                            filter: isHovered ? "drop-shadow(0 0 10px #38bdf8)" : "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
                           }}
                         />
 
                         {/* Label */}
                         <text
-                          y={-radius - 8}
+                          y={-radius - 7}
                           textAnchor="middle"
-                          fill={isHovered ? "#ec4899" : "#ffffff"}
+                          fill={isHovered ? "#38bdf8" : "#f1f5f9"}
                           fontSize={isHovered ? 12 : 10}
-                          fontWeight={isHovered ? "black" : "bold"}
+                          fontWeight={isHovered ? "800" : "600"}
                           style={{
                             paintOrder: "stroke",
-                            stroke: "#09090b",
+                            stroke: "#0f172a",
                             strokeWidth: 3,
                             strokeLinejoin: "round",
                           }}
@@ -258,72 +250,74 @@ export function HashtagNetwork({ data, loading = false }: HashtagNetworkProps) {
               </svg>
             </div>
 
-            {/* Sidebar Inspector Card */}
-            <div className="w-full lg:w-72 flex flex-col gap-4">
-              <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 flex flex-col gap-3">
-                <h4 className="font-black text-xs uppercase tracking-wider text-zinc-500">
-                  Jaringan Inspector
+            {/* Sidebar Inspector & Legend Card */}
+            <div className="w-full lg:w-80 flex flex-col gap-3">
+              <div className="p-4 rounded-xl border border-stone-200/80 dark:border-neutral-800 bg-stone-50 dark:bg-neutral-850 flex flex-col gap-2.5">
+                <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-neutral-500">
+                  Node Inspector
                 </h4>
                 
                 {hoveredNode ? (
-                  <div>
-                    <span className="text-xs font-bold text-zinc-400">Hashtag Terpilih</span>
-                    <h5 className="font-black text-base text-purple-600 mt-0.5">
-                      #{hoveredNode}
-                    </h5>
-                    <div className="mt-3 flex flex-col gap-2">
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="text-zinc-500">Total Koneksi:</span>
-                        <span className="font-extrabold text-zinc-700 dark:text-zinc-200">
-                          {connectedNodeIds.size - 1} hashtag
+                  <div className="space-y-2.5">
+                    <div>
+                      <span className="text-[10px] font-medium text-stone-400">Hashtag Terpilih</span>
+                      <h5 className="font-mono font-bold text-base text-stone-900 dark:text-white truncate">
+                        #{hoveredNode}
+                      </h5>
+                    </div>
+                    <div className="space-y-1.5 pt-2 border-t border-stone-200/60 dark:border-neutral-750 text-xs">
+                      <div className="flex justify-between items-center">
+                        <span className="text-stone-500 dark:text-neutral-400">Koneksi Hashtag:</span>
+                        <span className="font-mono font-bold text-stone-900 dark:text-white">
+                          {connectedNodeIds.size - 1} tag terhubung
                         </span>
                       </div>
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="text-zinc-500">Popularitas (Val):</span>
-                        <span className="font-extrabold text-zinc-700 dark:text-zinc-200">
+                      <div className="flex justify-between items-center">
+                        <span className="text-stone-500 dark:text-neutral-400">Nilai Frekuensi (Val):</span>
+                        <span className="font-mono font-bold text-stone-900 dark:text-white">
                           {nodeMap.get(hoveredNode)?.val}
                         </span>
                       </div>
                     </div>
                   </div>
                 ) : hoveredEdge ? (
-                  <div>
-                    <span className="text-xs font-bold text-zinc-400">Relasi Terpilih</span>
-                    <h5 className="font-black text-sm text-zinc-800 dark:text-zinc-200 mt-1 leading-snug">
-                      #{hoveredEdge.source} & #{hoveredEdge.target}
-                    </h5>
-                    <div className="mt-3 flex flex-col gap-2">
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="text-zinc-500">Co-occurrences:</span>
-                        <span className="font-extrabold text-purple-600">
-                          {hoveredEdge.weight} video
-                        </span>
-                      </div>
+                  <div className="space-y-2.5">
+                    <div>
+                      <span className="text-[10px] font-medium text-stone-400">Relasi Pasangan</span>
+                      <h5 className="font-mono font-bold text-sm text-stone-900 dark:text-white truncate">
+                        #{hoveredEdge.source} + #{hoveredEdge.target}
+                      </h5>
+                    </div>
+                    <div className="pt-2 border-t border-stone-200/60 dark:border-neutral-750 text-xs flex justify-between items-center">
+                      <span className="text-stone-500 dark:text-neutral-400">Co-occurrences:</span>
+                      <span className="font-mono font-bold text-sky-600 dark:text-sky-400">
+                        {hoveredEdge.weight} video bersama
+                      </span>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-xs text-zinc-400 dark:text-zinc-500 leading-relaxed">
-                    Arahkan kursor Anda ke bulatan hashtag (node) atau garis penghubung (edge) untuk melihat statistik korelasi detil.
+                  <p className="text-xs text-stone-500 dark:text-neutral-400 leading-relaxed py-1">
+                    Arahkan kursor ke node bulatan atau garis relasi untuk melihat data korelasi lengkap.
                   </p>
                 )}
               </div>
 
-              {/* Legend Summary */}
-              <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 flex flex-col gap-3">
-                <h4 className="font-black text-xs uppercase tracking-wider text-zinc-500">
-                  Informasi Graf
+              {/* Legend Information */}
+              <div className="p-4 rounded-xl border border-stone-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 space-y-2.5">
+                <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-neutral-500">
+                  Panduan Graf
                 </h4>
-                <div className="flex flex-col gap-2 text-xs">
+                <div className="space-y-2 text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="w-3.5 h-3.5 rounded-full bg-purple-500 inline-block border border-white"></span>
-                    <span className="text-zinc-600 dark:text-zinc-400">Bulatan = Hashtag</span>
+                    <span className="w-3 h-3 rounded-full bg-stone-900 dark:bg-white inline-block border border-stone-300"></span>
+                    <span className="text-stone-600 dark:text-neutral-300 font-medium">Bulatan: Entitas Hashtag</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="w-6 h-1 bg-purple-400/50 inline-block"></span>
-                    <span className="text-zinc-600 dark:text-zinc-400">Garis = Koneksi Penggunaan Bersama</span>
+                    <span className="w-5 h-1 bg-sky-400 inline-block rounded"></span>
+                    <span className="text-stone-600 dark:text-neutral-300 font-medium">Garis: Frekuensi Bersama</span>
                   </div>
-                  <p className="text-[10px] text-zinc-400 leading-relaxed mt-1">
-                    Ketebalan garis menunjukkan seberapa sering kedua hashtag tersebut digunakan bersama dalam satu video TikTok. Ukuran bulatan mewakili kekuatan popularitas relatif dari hashtag tersebut.
+                  <p className="text-[10px] text-stone-400 dark:text-neutral-500 leading-relaxed pt-1 border-t border-stone-100 dark:border-neutral-800">
+                    Makin tebal garis, makin sering kedua hashtag dipasang bersamaan oleh kreator pada konten viral.
                   </p>
                 </div>
               </div>

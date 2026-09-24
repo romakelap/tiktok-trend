@@ -80,25 +80,18 @@ export function CorrelationHeatmap({ data, loading = false }: CorrelationHeatmap
   const matrix = data?.matrix || [];
 
   return (
-    <div
-      className="relative rounded-2xl overflow-hidden"
-      style={{
-        background: TOKENS.card,
-        border: `1px solid ${TOKENS.cardBorder}`,
-        boxShadow: "0 4px 24px rgba(0,0,0,0.02)",
-      }}
-    >
+    <div className="rounded-2xl bg-white dark:bg-neutral-900 border border-stone-200/80 dark:border-neutral-800 shadow-sm overflow-hidden">
       <div className="p-6">
         {/* Title */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-500/10 border border-blue-500/20">
-            <Layers className="w-5 h-5 text-blue-500" />
+          <div className="w-8 h-8 rounded-lg bg-stone-900 dark:bg-stone-100 flex items-center justify-center text-white dark:text-stone-900 shadow-sm">
+            <Layers className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="font-black text-sm tracking-tight" style={{ color: TOKENS.text }}>
+            <h3 className="text-sm font-black text-stone-900 dark:text-white uppercase tracking-tight">
               Diagnostic Statistics (Feature Correlation Matrix)
             </h3>
-            <p className="text-[11px]" style={{ color: TOKENS.textMuted }}>
+            <p className="text-[11px] text-stone-500 dark:text-neutral-400">
               Koefisien Korelasi Pearson untuk mengukur dampak elemen video terhadap engagement
             </p>
           </div>

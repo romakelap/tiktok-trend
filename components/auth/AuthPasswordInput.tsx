@@ -13,13 +13,13 @@ type AuthPasswordInputProps = Omit<
 };
 
 /**
- * Password input with show/hide toggle. Forwards refs for react-hook-form.
+ * Password input with show/hide toggle matching the Landing Page design system.
  */
 export const AuthPasswordInput = React.forwardRef<
   HTMLInputElement,
   AuthPasswordInputProps
 >(function AuthPasswordInput(
-  { label = "Password", error, ...inputProps },
+  { label = "Kata Sandi", error, ...inputProps },
   ref
 ) {
   const [show, setShow] = React.useState(false);
@@ -35,11 +35,10 @@ export const AuthPasswordInput = React.forwardRef<
         <button
           type="button"
           onClick={() => setShow((v) => !v)}
-          className="transition-opacity hover:opacity-50"
-          style={{ color: "#aaa" }}
-          aria-label={show ? "Hide password" : "Show password"}
+          className="p-1 rounded-md text-stone-400 hover:text-black transition-colors focus:outline-none"
+          aria-label={show ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
         >
-          <Icon className="w-5 h-5" />
+          <Icon className="w-4 h-4" />
         </button>
       }
       {...inputProps}

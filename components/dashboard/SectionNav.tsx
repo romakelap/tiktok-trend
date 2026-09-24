@@ -1,43 +1,24 @@
 "use client";
 
-import { Activity, BarChart2, Layers, Target, Hash, Flame } from "lucide-react";
-
-import { TOKENS } from "@/lib/design-tokens";
+import { Activity, Layers, Target } from "lucide-react";
 
 const SECTIONS = [
-  { id: "kpi",             label: "Global Info",     Ico: Activity  },
-  { id: "category",        label: "Comparison",      Ico: Layers    },
-  { id: "radar",           label: "Radar",           Ico: BarChart2 },
-  { id: "trending-hash",   label: "Trending Tags",   Ico: Hash      },
-  { id: "top-videos",      label: "Top Videos",      Ico: Flame     },
-  { id: "category-detail", label: "Category Detail", Ico: Target    },
+  { id: "kpi",             label: "Global Info",        Ico: Activity },
+  { id: "category",        label: "Category Matrix",    Ico: Layers   },
+  { id: "category-detail", label: "Category Deep Dive", Ico: Target   },
 ] as const;
 
-/**
- * Sticky in-page anchor nav sitting just below the toolbar. Each link jumps
- * to a `section[id="…"]` via the browser's native scroll behaviour
- * (CSS `scroll-margin-top` keeps the scroll offset correct under the
- * sticky headers).
- */
 export function SectionNav() {
   return (
-    <div
-      className="sticky top-[60px] z-20 px-6 py-2.5 border-b"
-      style={{
-        background: TOKENS.header,
-        backdropFilter: "blur(20px)",
-        borderColor: TOKENS.divider,
-      }}
-    >
-      <div className="flex items-center gap-0.5 overflow-x-auto">
+    <div className="sticky top-[61px] z-20 px-6 py-2 bg-stone-50/90 dark:bg-neutral-950/90 backdrop-blur-md border-b border-stone-200/80 dark:border-neutral-800">
+      <div className="flex items-center gap-1.5 overflow-x-auto">
         {SECTIONS.map((s) => (
           <a
             key={s.id}
             href={`#${s.id}`}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all hover:bg-black/[0.05]"
-            style={{ color: TOKENS.textMuted }}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold text-stone-600 dark:text-neutral-400 hover:text-stone-900 dark:hover:text-white hover:bg-stone-200/60 dark:hover:bg-neutral-800 transition-colors whitespace-nowrap"
           >
-            <s.Ico className="w-3.5 h-3.5" strokeWidth={2.4} />
+            <s.Ico className="w-3.5 h-3.5" strokeWidth={2} />
             {s.label}
           </a>
         ))}

@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { ROUTES } from "@/lib/routes";
 
@@ -10,31 +12,38 @@ type AuthBrandProps = {
  * Logo + brand wordmark shown above auth forms. Always linked back to landing.
  */
 export function AuthBrand({ variant = "light" }: AuthBrandProps) {
-  const textColor = variant === "dark" ? "#fff" : "#111";
+  const isDark = variant === "dark";
 
   return (
     <Link
       href={ROUTES.landing}
-      className="relative z-10 flex items-center gap-3 group"
+      className="relative z-10 inline-flex items-center gap-2.5 group shrink-0"
     >
       <div
-        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110"
-        style={{ background: "#111", boxShadow: "0 4px 16px rgba(0,0,0,0.22)" }}
+        className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shadow-xs transition-transform group-hover:scale-105 ${
+          isDark ? "bg-white text-black" : "bg-black text-white"
+        }`}
       >
-        <svg
-          className="w-5 h-5 text-white"
-          fill="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z" />
-        </svg>
+        <span className="font-mono text-[11px] tracking-tight">TT</span>
       </div>
-      <span
-        className="font-black text-lg tracking-tight"
-        style={{ color: textColor }}
-      >
-        TikAnalytics
-      </span>
+      <div className="flex items-center gap-2">
+        <span
+          className={`font-bold text-base tracking-tight ${
+            isDark ? "text-white" : "text-black"
+          }`}
+        >
+          TikTrend BI
+        </span>
+        <span
+          className={`text-[10px] font-mono font-medium px-2 py-0.5 rounded-full border ${
+            isDark
+              ? "bg-white/10 text-stone-300 border-white/15"
+              : "bg-stone-100 text-stone-600 border-stone-200/80"
+          }`}
+        >
+          v2.5
+        </span>
+      </div>
     </Link>
   );
 }

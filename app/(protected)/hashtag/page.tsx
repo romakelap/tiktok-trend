@@ -1,17 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { AlertCircle, Hash, Search, FileDown } from "lucide-react";
+import React, { useState, useEffect, useMemo } from 'react';
+import { AlertCircle, Hash, Search, FileDown, Trophy, Table as TableIcon, TrendingUp } from "lucide-react";
 import { PageShell } from "@/components/layout/PageShell";
-import { TOKENS } from "@/lib/design-tokens";
 import { CatData, CAT_COLORS } from "@/lib/hashtag/mock-data";
 import { GlobalKpis } from "@/components/hashtag/GlobalKpis";
 import { CategorySelector } from "@/components/hashtag/CategorySelector";
 import { TopHashtags } from "@/components/hashtag/TopHashtags";
-import { CrossCategory } from "@/components/hashtag/CrossCategory";
-import { HotTagsAll } from "@/components/hashtag/HotTagsAll";
 import { HashtagTable } from "@/components/hashtag/HashtagTable";
-import { HashtagNetwork } from "@/components/hashtag/HashtagNetwork";
 import { apiFetch } from "@/lib/api";
 import { exportHashtagPdf } from "@/lib/hashtag/export-pdf";
 
@@ -42,28 +38,90 @@ function getTrendFromGrowth(growth: number): 'hot' | 'up' | 'stable' | 'down' {
   return 'down';
 }
 
+function HashtagProcessingLoader() {
+  const [stepIndex, setStepIndex] = useState(0);
+
+  const steps = useMemo(() => [
+    { label: "Memuat basis data & statistik indeks hashtag...", icon: Hash, sub: "TikTok Trend Ingestion Pipeline" },
+    { label: "Mengalkulasi kecepatan tren & laju pertumbuhan 7 hari...", icon: TrendingUp, sub: "Growth Velocity & Trend Engine" },
+    { label: "Menganalisis perbandingan metrik & visualisasi...", icon: Trophy, sub: "Multi-metric Analytics Engine" },
+  ], []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setStepIndex((prev) => (prev + 1) % steps.length);
+    }, 1200);
+    return () => clearInterval(timer);
+  }, [steps.length]);
+
+  const CurrentIcon = steps[stepIndex].icon;
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[65vh] px-4">
+      <div className="relative flex flex-col items-center max-w-md w-full text-center">
+        {/* Animated pulsing rings & Central Icon */}
+        <div className="relative mb-6 flex items-center justify-center">
+          <div className="absolute -inset-4 rounded-full bg-sky-400/20 dark:bg-sky-500/10 blur-xl animate-pulse" />
+          <div className="absolute w-24 h-24 rounded-full border border-sky-300/40 dark:border-sky-500/20 animate-ping opacity-30" style={{ animationDuration: '2.5s' }} />
+          <div className="absolute w-20 h-20 rounded-2xl border border-stone-200 dark:border-neutral-700 animate-spin" style={{ animationDuration: '10s' }} />
+          
+          <div className="relative w-16 h-16 rounded-2xl bg-white dark:bg-neutral-900 border border-stone-200/80 dark:border-neutral-700 shadow-md flex items-center justify-center text-sky-600 dark:text-sky-400">
+            <CurrentIcon className="w-7 h-7 animate-pulse transition-all duration-300" />
+          </div>
+        </div>
+
+        {/* Dynamic Step Text */}
+        <div className="space-y-1.5 min-h-[56px]">
+          <h3 className="text-sm md:text-base font-bold text-stone-900 dark:text-white transition-all duration-300">
+            {steps[stepIndex].label}
+          </h3>
+          <p className="text-xs font-mono text-stone-500 dark:text-neutral-400">
+            {steps[stepIndex].sub}
+          </p>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="w-48 h-1 bg-stone-200 dark:bg-neutral-800 rounded-full overflow-hidden mt-6">
+          <div
+            className="h-full bg-sky-600 dark:bg-sky-400 rounded-full transition-all duration-500"
+            style={{ width: `${((stepIndex + 1) / steps.length) * 100}%` }}
+          />
+        </div>
+
+        {/* Step dots */}
+        <div className="flex items-center gap-1.5 mt-3">
+          {steps.map((_, i) => (
+            <div
+              key={i}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                i === stepIndex
+                  ? 'w-6 bg-sky-600 dark:bg-sky-400'
+                  : 'w-1.5 bg-stone-200 dark:bg-neutral-700'
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function HashtagDashboard() {
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'top-detail' | 'directory'>('top-detail');
   const [allData, setAllData] = useState<CatData[]>([]);
-  const [networkData, setNetworkData] = useState<any>({ nodes: [], edges: [] });
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingNetwork, setIsLoadingNetwork] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadHashtagData() {
       setIsLoading(true);
-      setIsLoadingNetwork(true);
       setError(null);
       try {
-        const [compRes, netRes, ...hashtagResults] = await Promise.all([
+        const [compRes, ...hashtagResults] = await Promise.all([
           apiFetch<any>('/api/category/comparison').catch(err => {
             console.error("Failed to fetch category comparison:", err);
-            return null;
-          }),
-          apiFetch<any>('/api/analytics/hashtag-network?limit=25').catch(err => {
-            console.error("Failed to fetch hashtag network:", err);
             return null;
           }),
           ...CATEGORY_NAMES_BACKEND.map(cat =>
@@ -136,18 +194,11 @@ export default function HashtagDashboard() {
         };
 
         setAllData([allCategoryData, ...mappedData]);
-
-        if (netRes?.success && netRes.data) {
-          setNetworkData(netRes.data);
-        } else {
-          setNetworkData({ nodes: [], edges: [] });
-        }
       } catch (err) {
         console.error("Failed to load hashtag page data:", err);
         setError("Gagal memuat data dari server");
       } finally {
         setIsLoading(false);
-        setIsLoadingNetwork(false);
       }
     }
 
@@ -155,19 +206,31 @@ export default function HashtagDashboard() {
   }, []);
 
   const catData = allData.find(d => d.category === activeCategory) || allData[0] || { category: activeCategory, totalPosts: 0, weekGrowth: 0, tags: [] };
-  const catColor = activeCategory === 'All' ? '#111' : (CAT_COLORS[activeCategory] ?? '#111');
+  const catColor = activeCategory === 'All' ? '#0284c7' : (CAT_COLORS[activeCategory] ?? '#0284c7');
 
   const handleExportPdf = () => {
     exportHashtagPdf(activeCategory, catData.tags);
   };
 
+  const tabs = [
+    {
+      id: 'top-detail' as const,
+      label: 'Top & Detail Hashtag',
+      icon: Trophy,
+      count: catData?.tags?.length ? `${Math.min(10, catData.tags.length)} Top` : undefined,
+    },
+    {
+      id: 'directory' as const,
+      label: 'Detail Hashtag Directory',
+      icon: TableIcon,
+      count: catData?.tags?.length ? `${catData.tags.length} Total` : undefined,
+    },
+  ];
+
   if (isLoading) {
     return (
       <PageShell title="Global Hashtag Analysis">
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-          <div className="w-8 h-8 rounded-full border-4 border-t-transparent animate-spin" style={{ borderColor: '#111 transparent #111 #111' }} />
-          <p className="text-sm font-black" style={{ color: TOKENS.textMuted }}>Memuat analisis hashtag...</p>
-        </div>
+        <HashtagProcessingLoader />
       </PageShell>
     );
   }
@@ -176,10 +239,7 @@ export default function HashtagDashboard() {
     return (
       <PageShell title="Global Hashtag Analysis">
         <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-          <div
-            className="p-4 rounded-xl flex items-center gap-3 text-sm font-bold max-w-md"
-            style={{ background: TOKENS.negativeBg, border: `1px solid rgba(185,28,28,0.2)`, color: TOKENS.negative }}
-          >
+          <div className="p-4 rounded-xl flex items-center gap-3 text-xs font-bold max-w-md bg-rose-50 dark:bg-rose-950/40 border border-rose-200 text-rose-700 dark:text-rose-300">
             <AlertCircle className="w-5 h-5 flex-shrink-0" strokeWidth={2} />
             <span>{error}</span>
           </div>
@@ -190,84 +250,60 @@ export default function HashtagDashboard() {
 
   return (
     <PageShell title="Global Hashtag Analysis">
-      {/* ── Toolbar with Page Title and Search ── */}
-      <div
-        className="sticky top-0 z-20 px-6 py-4 border-b flex items-center justify-between gap-4 flex-wrap"
-        style={{
-          background: 'rgba(248, 248, 246, 0.95)',
-          backdropFilter: 'blur(20px)',
-          borderColor: TOKENS.divider
-        }}
-      >
+      {/* ── Toolbar with Page Title, Search & PDF Export ── */}
+      <div className="sticky top-0 z-20 px-6 py-4 border-b border-stone-200/80 dark:border-neutral-800 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: '#111', boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}
-          >
-            <Hash className="w-5 h-5 text-white" />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-sky-600 text-white shadow-sm flex-shrink-0">
+            <Hash className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-lg font-black flex items-center gap-2" style={{ color: TOKENS.text }}>
-              Global Hashtag Analysis
-              <span
-                className="px-2 py-0.5 rounded-full text-[10px] font-black text-white"
-                style={{ background: '#111', boxShadow: '0 0 10px rgba(0,0,0,0.18)' }}
-              >
-                Live
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-black text-stone-900 dark:text-white">
+                Global Hashtag Analytics
+              </h1>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
+                Live Data
               </span>
-            </h1>
-            <p className="text-xs" style={{ color: TOKENS.textMuted }}>
-              Top 10 hashtag per kategori · tren pertumbuhan · video terkait
+            </div>
+            <p className="text-xs text-stone-500 dark:text-neutral-400">
+              Analisis perbandingan tren, kecepatan pertumbuhan & benchmarking hashtag
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <div className="relative">
             <input
               type="text"
               placeholder="Cari hashtag..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-56 px-4 py-2.5 pl-10 rounded-xl text-sm outline-none"
-              style={{
-                background: TOKENS.input,
-                border: `1px solid ${TOKENS.inputBorder}`,
-                color: TOKENS.text,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-              }}
+              className="w-48 sm:w-56 px-3.5 py-2 pl-9 rounded-xl text-xs outline-none bg-stone-50 dark:bg-neutral-800 border border-stone-200/80 dark:border-neutral-700 text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-neutral-500 focus:border-sky-500 transition-colors"
             />
-            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: TOKENS.textMuted }}>
-              <Search className="w-4 h-4" />
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400">
+              <Search className="w-3.5 h-3.5" />
             </div>
           </div>
 
           <button
             onClick={handleExportPdf}
             disabled={isLoading}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all hover:scale-105 active:scale-95 duration-200"
-            style={{
-              background: isLoading ? '#cbd5e1' : '#111111',
-              color: isLoading ? '#64748b' : '#ffffff',
-              boxShadow: isLoading ? 'none' : '0 4px 14px rgba(17, 17, 17, 0.25)',
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-              border: 'none',
-            }}
-            title="Ekspor data ke PDF"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all bg-sky-600 hover:bg-sky-700 text-white shadow-2xs cursor-pointer disabled:opacity-50"
+            title="Ekspor laporan hashtag ke PDF"
           >
-            <FileDown className="w-4 h-4" strokeWidth={2.5} />
+            <FileDown className="w-3.5 h-3.5" />
             Export PDF
           </button>
         </div>
       </div>
 
-      <div className="p-6 space-y-6" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-        {/* 1. Global KPIs */}
+      <div className="p-6 space-y-6">
+        {/* 1. Global KPIs (4 Cards) */}
         <div id="hashtag-kpi">
           <GlobalKpis allData={allData} />
         </div>
 
-        {/* 2. Category Selector */}
+        {/* 2. Category Selector Pills */}
         <div id="hashtag-categories">
           <CategorySelector
             activeCategory={activeCategory}
@@ -276,42 +312,66 @@ export default function HashtagDashboard() {
           />
         </div>
 
-        {/* 3. Top 10 Hashtags */}
-        <div id="hashtag-top">
-          <TopHashtags
-            catData={catData}
-            catColor={catColor}
-            activeCategory={activeCategory}
-            searchQuery={searchQuery}
-          />
+        {/* 3. 2-Tab Segmented Navigation (Top & Detail Hashtag + Detail Hashtag Directory) */}
+        <div className="flex items-center justify-between flex-wrap gap-3 border-b border-stone-200/80 dark:border-neutral-800 pb-3">
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-stone-100 dark:bg-neutral-850 border border-stone-200/80 dark:border-neutral-800 flex-wrap">
+            {tabs.map(tab => {
+              const IconComponent = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    isActive
+                      ? 'bg-white dark:bg-neutral-900 text-sky-600 dark:text-sky-400 shadow-2xs border border-stone-200/60 dark:border-neutral-750'
+                      : 'text-stone-500 dark:text-neutral-400 hover:text-stone-900 dark:hover:text-white'
+                  }`}
+                >
+                  <IconComponent className={`w-4 h-4 ${isActive ? 'text-sky-600 dark:text-sky-400' : 'text-stone-400'}`} />
+                  <span>{tab.label}</span>
+                  {tab.count && (
+                    <span
+                      className={`text-[10px] font-mono px-1.5 py-0.2 rounded-md ${
+                        isActive
+                          ? 'bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 font-bold border border-sky-200/60 dark:border-sky-800/60'
+                          : 'bg-stone-200/60 dark:bg-neutral-800 text-stone-500 dark:text-neutral-400'
+                      }`}
+                    >
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="text-xs text-stone-400 dark:text-neutral-500 font-mono hidden sm:block">
+            Kategori Aktif: <span className="font-bold text-sky-600 dark:text-sky-400">{activeCategory}</span>
+          </div>
         </div>
 
-        {/* 4. Detailed Hashtag Table */}
-        <div id="hashtag-table">
-          <HashtagTable
-            tags={catData.tags}
-            activeCategory={activeCategory}
-          />
-        </div>
+        {/* Tab 1: Top & Detail Hashtag (Diagram Garis Metrik + Bar Biru + Sample Video Drawer) */}
+        {activeTab === 'top-detail' && (
+          <div className="space-y-6">
+            <TopHashtags
+              catData={catData}
+              catColor={catColor}
+              activeCategory={activeCategory}
+              searchQuery={searchQuery}
+            />
+          </div>
+        )}
 
-        {/* Hashtag Network Graph */}
-        <div id="hashtag-network">
-          <HashtagNetwork data={networkData} loading={isLoadingNetwork} />
-        </div>
-
-        {/* 5. Cross Category Perbandingan */}
-        <div id="hashtag-cross">
-          <CrossCategory
-            activeCategory={activeCategory}
-            onSelectCategory={setActiveCategory}
-            allData={allData}
-          />
-        </div>
-
-        {/* 6. Hot Tags Grid */}
-        <div id="hashtag-hot">
-          <HotTagsAll onSelectCategory={setActiveCategory} allData={allData} />
-        </div>
+        {/* Tab 2: Detail Hashtag Directory (Tabel lengkap dengan search & paginasi) */}
+        {activeTab === 'directory' && (
+          <div className="space-y-6">
+            <HashtagTable
+              tags={catData.tags}
+              activeCategory={activeCategory}
+            />
+          </div>
+        )}
       </div>
     </PageShell>
   );

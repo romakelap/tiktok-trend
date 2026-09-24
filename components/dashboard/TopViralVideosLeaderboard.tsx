@@ -1,7 +1,6 @@
 "use client";
 
-import { Eye, Flame, Calendar } from "lucide-react";
-import { TOKENS } from "@/lib/design-tokens";
+import { Eye, Flame, Calendar, ChevronRight } from "lucide-react";
 
 export interface TopVideoItem {
   videoPk: string | number;
@@ -31,21 +30,19 @@ function formatDate(iso: string) {
   return iso.split("T")[0];
 }
 
-// Same subtle tint for all top 3
-const TOP_ACCENT = {
-  bg:      "rgba(47,87,138,0.06)",
-  border:  "rgba(47,87,138,0.20)",
-  shadow:  "0 4px 16px rgba(47,87,138,0.10)",
-  rankBg:  "#2F578A",
-  rankTxt: "#fff",
-};
-
-export function TopViralVideosLeaderboard({ data, loading, onVideoClick }: Props) {
+export function TopViralVideosLeaderboard({
+  data,
+  loading,
+  onVideoClick,
+}: Props) {
   if (loading) {
     return (
       <div className="space-y-2">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="h-14 rounded-2xl animate-pulse" style={{ background: "rgba(0,0,0,0.04)" }} />
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div
+            key={i}
+            className="h-14 rounded-xl bg-stone-100 dark:bg-neutral-800/50 animate-pulse border border-stone-200/80 dark:border-neutral-800"
+          />
         ))}
       </div>
     );
@@ -53,8 +50,7 @@ export function TopViralVideosLeaderboard({ data, loading, onVideoClick }: Props
 
   if (!data || data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-28 rounded-2xl border border-dashed text-xs font-bold"
-           style={{ borderColor: TOKENS.divider, color: TOKENS.textMuted }}>
+      <div className="flex items-center justify-center h-28 rounded-xl border border-dashed border-stone-200 dark:border-neutral-800 text-xs font-medium text-stone-500">
         Belum ada data video
       </div>
     );
@@ -65,82 +61,95 @@ export function TopViralVideosLeaderboard({ data, loading, onVideoClick }: Props
   return (
     <div className="space-y-2">
       {data.map((video, idx) => {
-        const isTop3   = idx < 3;
+        const rank = idx + 1;
+        const isTop3 = rank <= 3;
         const viewsPct = Math.round(((video.viewsNum ?? 0) / maxViews) * 100);
-        const engPct   = Math.min(100, Math.round((video.engagementRate ?? 0) * 100 * 5));
-        const engGood  = (video.engagementRate ?? 0) >= 0.07;
+        const engRatePct = (video.engagementRate ?? 0) * 100;
+        const engGood = engRatePct >= 2.0;
 
         return (
           <button
             key={video.videoPk}
             type="button"
             onClick={() => onVideoClick?.(video.videoPk)}
-            className="w-full text-left flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all hover:shadow-md active:scale-[0.99]"
-            style={{
-              background:  isTop3 ? TOP_ACCENT.bg     : "#fff",
-              borderColor: isTop3 ? TOP_ACCENT.border  : TOKENS.divider,
-              boxShadow:   isTop3 ? TOP_ACCENT.shadow  : "none",
-              cursor: onVideoClick ? "pointer" : "default",
-            }}
+            className={`w-full text-left flex items-center gap-3.5 px-4 py-3 rounded-xl border transition-all bg-white dark:bg-neutral-900 cursor-pointer ${
+              isTop3
+                ? "border-stone-900/30 dark:border-white/30 shadow-xs hover:bg-stone-50 dark:hover:bg-neutral-800/60"
+                : "border-stone-200/80 dark:border-neutral-800 hover:bg-stone-50 dark:hover:bg-neutral-800/40 hover:border-stone-400"
+            }`}
           >
-            {/* Rank badge */}
+            {/* Rank */}
             <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-[11px] font-black"
-              style={{
-                background: isTop3 ? TOP_ACCENT.rankBg  : "rgba(0,0,0,0.04)",
-                color:      isTop3 ? TOP_ACCENT.rankTxt : TOKENS.textMuted,
-              }}
+              className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-mono font-bold ${
+                isTop3
+                  ? "bg-stone-900 text-white dark:bg-white dark:text-stone-900"
+                  : "bg-stone-100 dark:bg-neutral-800 text-stone-600 dark:text-neutral-400"
+              }`}
             >
-              {idx + 1}
+              {rank}
             </div>
 
-            {/* Title + account */}
+            {/* Title & Metadata */}
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-black truncate leading-snug" style={{ color: TOKENS.text }}>
-                {video.titleBrief || "Untitled"}
-              </p>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-[10px] font-bold truncate" style={{ color: TOKENS.textMuted }}>
+              <div className="flex items-center gap-1.5">
+                <p className="text-xs font-bold text-stone-900 dark:text-white truncate">
+                  {video.titleBrief || "Untitled Video"}
+                </p>
+                {isTop3 && (
+                  <Flame className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                )}
+              </div>
+              <div className="flex items-center gap-2 mt-0.5 text-[11px] text-stone-500 dark:text-neutral-400">
+                <span className="font-medium text-stone-700 dark:text-neutral-300">
                   @{video.nickName}
                 </span>
-                <span className="flex items-center gap-0.5 text-[10px] font-bold flex-shrink-0"
-                  style={{ color: TOKENS.textMuted }}>
-                  <Calendar className="w-2.5 h-2.5" strokeWidth={2.5} />
+                <span>•</span>
+                <span className="flex items-center gap-1 font-mono">
+                  <Calendar className="w-3 h-3" />
                   {formatDate(video.publishedAt)}
                 </span>
+                {video.durationBucket && (
+                  <>
+                    <span>•</span>
+                    <span className="font-mono text-[10px]">
+                      {video.durationBucket}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
 
-            {/* Views */}
-            <div className="hidden sm:flex flex-col items-end gap-1 w-24 flex-shrink-0">
-              <div className="flex items-center gap-1.5 w-full justify-end">
-                <Eye className="w-3 h-3 flex-shrink-0" style={{ color: TOKENS.textMuted }} strokeWidth={2.4} />
-                <span className="text-[11px] font-black" style={{ color: TOKENS.text }}>
-                  {fmt(video.viewsNum ?? 0)}
-                </span>
+            {/* Views Bar (Sky Blue) */}
+            <div className="hidden sm:flex flex-col items-end gap-1 w-32 flex-shrink-0">
+              <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-stone-900 dark:text-white">
+                <Eye className="w-3.5 h-3.5 text-sky-500" />
+                {fmt(video.viewsNum ?? 0)}
               </div>
-              <div className="relative w-full h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(0,0,0,0.06)" }}>
-                <div className="absolute inset-y-0 left-0 rounded-full"
-                  style={{ width: `${viewsPct}%`, background: "#2F578A" }} />
+              <div className="w-full h-2 rounded-full bg-sky-100/60 dark:bg-neutral-800 overflow-hidden">
+                <div
+                  className="h-full bg-sky-500 dark:bg-sky-400 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.max(viewsPct, 4)}%` }}
+                />
               </div>
             </div>
 
             {/* Engagement */}
-            <div className="hidden md:flex flex-col items-end gap-1 w-20 flex-shrink-0">
-              <span className="text-[11px] font-black"
-                style={{ color: engGood ? "#059669" : "#b45309" }}>
-                {((video.engagementRate ?? 0) * 100).toFixed(1)}%
+            <div className="hidden md:flex flex-col items-end gap-0.5 w-20 flex-shrink-0">
+              <span className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">
+                Engage
               </span>
-              <div className="relative w-full h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(0,0,0,0.06)" }}>
-                <div className="absolute inset-y-0 left-0 rounded-full"
-                  style={{ width: `${engPct}%`, background: engGood ? "#059669" : "#f59e0b" }} />
-              </div>
+              <span
+                className={`text-xs font-mono font-bold ${
+                  engGood
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-stone-700 dark:text-neutral-300"
+                }`}
+              >
+                {engRatePct.toFixed(1)}%
+              </span>
             </div>
 
-            {/* Flame icon top 3 */}
-            {isTop3 && (
-              <Flame className="w-4 h-4 flex-shrink-0" style={{ color: "#2F578A" }} strokeWidth={2.2} />
-            )}
+            <ChevronRight className="w-4 h-4 text-stone-400 flex-shrink-0 ml-1" />
           </button>
         );
       })}

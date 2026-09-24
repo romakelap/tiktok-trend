@@ -1,7 +1,35 @@
+"use client";
+
 import React, { useState, useMemo } from 'react';
-import { Flame, TrendingUp, TrendingDown, ChevronDown, ChevronUp, Hash, Award, Video, Eye, Heart, MessageCircle } from "lucide-react";
-import { GridBg } from "@/components/layout/GridBg";
-import { TOKENS } from "@/lib/design-tokens";
+import {
+  Flame,
+  TrendingUp,
+  TrendingDown,
+  ChevronDown,
+  ChevronUp,
+  Hash,
+  Video,
+  Eye,
+  Heart,
+  MessageCircle,
+  BarChart2,
+  Layers,
+  LineChart as LineChartIcon,
+  Activity,
+  Sparkles,
+  ExternalLink
+} from "lucide-react";
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  Bar,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  Legend
+} from 'recharts';
 import { CatData, Tag, getTrendConfig, fmt } from "@/lib/hashtag/mock-data";
 import { apiFetch } from "@/lib/api";
 import { CAT_ICONS } from "./CategorySelector";
@@ -9,28 +37,44 @@ import { VideoMiniCard } from "./VideoMiniCard";
 
 interface TopHashtagsProps {
   catData: CatData;
-  catColor: string;
+  catColor?: string;
   activeCategory: string;
   searchQuery: string;
 }
 
-export function TopHashtags({ catData, catColor, activeCategory, searchQuery }: TopHashtagsProps) {
+export function TopHashtags({ catData, catColor = '#0284c7', activeCategory, searchQuery }: TopHashtagsProps) {
   const [expandedTag, setExpandedTag] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<'uses' | 'growth' | 'engagement'>('uses');
   const [tagVideos, setTagVideos] = useState<Record<string, any[]>>({});
   const [loadingVideos, setLoadingVideos] = useState<Record<string, boolean>>({});
 
+  // Series visibility for the combined chart
+  const [visibleSeries, setVisibleSeries] = useState({
+    uses: true,
+    growth: true,
+    engagement: true,
+  });
+
   const CatIcon = CAT_ICONS[activeCategory] ?? Hash;
 
-  const sortedTags = useMemo(() => {
+  // Always sort top 10 by uses for standard hierarchy
+  const topTags = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    const filtered = (catData?.tags || []).filter(t => t.tag.toLowerCase().includes(q));
-    return [...filtered].sort((a, b) => {
-      if (sortBy === 'uses') return b.uses - a.uses;
-      if (sortBy === 'growth') return b.weekGrowth - a.weekGrowth;
-      return b.engagement - a.engagement;
-    }).slice(0, 10);
-  }, [catData, sortBy, searchQuery]);
+    const filtered = (catData?.tags || []).filter((t: Tag) => t.tag.toLowerCase().includes(q));
+    return [...filtered].sort((a, b) => b.uses - a.uses).slice(0, 10);
+  }, [catData, searchQuery]);
+
+  // Prepare unified multi-metric chart data for Top 10
+  const chartData = useMemo(() => {
+    return topTags.map(t => ({
+      name: t.tag.replace('#', ''),
+      fullTag: t.tag,
+      uses: t.uses,
+      growth: t.weekGrowth,
+      engagement: t.engagement,
+      avgViews: t.avgViews,
+      videoCount: t.videoCount,
+    }));
+  }, [topTags]);
 
   const handleToggleExpand = async (tagTitle: string) => {
     const isExpanding = expandedTag !== tagTitle;
@@ -91,284 +135,456 @@ export function TopHashtags({ catData, catColor, activeCategory, searchQuery }: 
     }
   };
 
+  const toggleSeries = (key: keyof typeof visibleSeries) => {
+    setVisibleSeries(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
   return (
-    <div
-      className="relative rounded-2xl overflow-hidden"
-      style={{
-        background: '#FFFFFF',
-        border: `1px solid rgba(0,0,0,0.08)`,
-        boxShadow: '0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,1)'
-      }}
-    >
-      <GridBg theme="light" />
-
-      <div className="relative z-10 p-6">
-        {/* ── Panel header ── */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
-          <div className="flex items-center gap-3">
-            {/* Category icon */}
-            <div
-              className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: catColor, boxShadow: `0 2px 10px rgba(0,0,0,0.15)` }}
-            >
-              <CatIcon className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 mb-0.5">
-                <h2 className="font-black text-lg" style={{ color: TOKENS.text }}>Top 10 Hashtag</h2>
-                <span
-                  className="px-2 py-0.5 rounded-full text-[10px] font-black text-white"
-                  style={{ background: catColor }}
-                >
-                  {activeCategory}
-                </span>
+    <div className="space-y-6">
+      {/* ── 1. Unified Multi-Metric Line Chart Panel ── */}
+      <div className="rounded-2xl bg-white dark:bg-neutral-900 border border-stone-200/80 dark:border-neutral-800 shadow-2xs overflow-hidden">
+        <div className="p-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 border border-sky-200/60 dark:border-sky-800/60 shadow-2xs">
+                <LineChartIcon className="w-5 h-5" />
               </div>
-              <p className="text-xs" style={{ color: TOKENS.textMuted }}>
-                {fmt(catData?.tags?.length || 0)} total hashtags ·{' '}
-                <span style={{ color: (catData?.weekGrowth || 0) >= 0 ? TOKENS.positive : TOKENS.negative, fontWeight: 700 }}>
-                  {(catData?.weekGrowth || 0) >= 0 ? '+' : ''}{catData?.weekGrowth || 0}% minggu ini
-                </span>
-              </p>
+              <div>
+                <h3 className="font-black text-base text-stone-900 dark:text-white">
+                  Visualisasi Diagram Metrik Top 10 Hashtag
+                </h3>
+                <p className="text-xs text-stone-500 dark:text-neutral-400">
+                  Perbandingan tren satu grafik: Penggunaan (Uses), Pertumbuhan (%), dan Engagement Rate (%)
+                </p>
+              </div>
             </div>
-          </div>
-          {/* Sort tabs */}
-          <div
-            className="flex gap-1 p-1 rounded-xl"
-            style={{ background: '#F2F1EF', border: '1px solid rgba(0,0,0,0.08)' }}
-          >
-            {(['uses', 'growth', 'engagement'] as const).map(s => (
+
+            {/* Interactive Series Toggle Buttons */}
+            <div className="flex items-center gap-2 flex-wrap">
               <button
-                key={s}
-                onClick={() => setSortBy(s)}
-                className="px-3 py-1.5 rounded-lg text-xs font-black transition-all duration-200"
-                style={{
-                  background: sortBy === s ? '#fff' : 'transparent',
-                  color: sortBy === s ? TOKENS.text : TOKENS.textMuted,
-                  boxShadow: sortBy === s ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
-                  border: sortBy === s ? '1px solid rgba(0,0,0,0.08)' : '1px solid transparent',
-                }}
+                onClick={() => toggleSeries('uses')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                  visibleSeries.uses
+                    ? 'bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 border-sky-300 dark:border-sky-700 shadow-2xs'
+                    : 'bg-stone-50 text-stone-400 dark:bg-neutral-800 border-stone-200 dark:border-neutral-700 opacity-60'
+                }`}
               >
-                {s === 'uses' ? 'Penggunaan' : s === 'growth' ? 'Pertumbuhan' : 'Engagement'}
+                <span className="w-2.5 h-2.5 rounded-sm bg-sky-500" />
+                <span>Penggunaan (Bar)</span>
               </button>
-            ))}
+
+              <button
+                onClick={() => toggleSeries('growth')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                  visibleSeries.growth
+                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 shadow-2xs'
+                    : 'bg-stone-50 text-stone-400 dark:bg-neutral-800 border-stone-200 dark:border-neutral-700 opacity-60'
+                }`}
+              >
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                <span>Pertumbuhan (Line %)</span>
+              </button>
+
+              <button
+                onClick={() => toggleSeries('engagement')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                  visibleSeries.engagement
+                    ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border-amber-300 dark:border-amber-700 shadow-2xs'
+                    : 'bg-stone-50 text-stone-400 dark:bg-neutral-800 border-stone-200 dark:border-neutral-700 opacity-60'
+                }`}
+              >
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                <span>Engagement Rate (Line %)</span>
+              </button>
+            </div>
           </div>
-        </div>
 
-        {/* ── Hashtag rows ── */}
-        <div className="space-y-1.5">
-          {sortedTags.map((tag, idx) => {
-            const maxUses = sortedTags[0]?.uses || 1;
-            const pct = (tag.uses / maxUses) * 100;
-            const isNo1 = idx === 0;
-            const tc = getTrendConfig(tag.trend);
-            const isExpand = expandedTag === tag.tag;
-
-            // Row bg: #1 gets a very light category tint, rest alternate white/slate
-            const rowBg = isExpand
-              ? `${catColor}0e`
-              : isNo1
-              ? `${catColor}08`
-              : idx % 2 === 0 ? '#FFFFFF' : '#F9F8F7';
-
-            return (
-              <div key={tag.tag}>
-                {/* ── Row ── */}
-                <div
-                  onClick={() => handleToggleExpand(tag.tag)}
-                  className="group cursor-pointer rounded-xl transition-all duration-150 hover:shadow-sm"
-                  style={{
-                    background: rowBg,
-                    border: isExpand
-                      ? `1.5px solid ${catColor}55`
-                      : isNo1
-                      ? `1px solid ${catColor}30`
-                      : '1px solid rgba(0,0,0,0.06)',
-                  }}
+          {/* Composed Chart Canvas (Bar for Uses + Line for Rates) */}
+          {chartData.length > 0 ? (
+            <div style={{ height: 310 }} className="w-full mt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart
+                  data={chartData}
+                  margin={{ top: 15, right: 20, left: -10, bottom: 5 }}
                 >
-                  <div className="flex items-center gap-3 px-4 py-3">
-                    {/* Rank */}
-                    <div
-                      className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 font-black text-xs"
-                      style={{
-                        background: isNo1 ? catColor : '#ECEAE7',
-                        color: isNo1 ? '#fff' : TOKENS.textMuted,
-                      }}
-                    >
-                      {idx + 1}
-                    </div>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 11, fontWeight: 700, fill: "#64748b" }}
+                    axisLine={{ stroke: "#e2e8f0" }}
+                    tickLine={false}
+                    tickFormatter={(v) => `#${v}`}
+                  />
+                  {/* Left Y-Axis for Uses */}
+                  <YAxis
+                    yAxisId="left"
+                    orientation="left"
+                    tick={{ fontSize: 10, fontWeight: 600, fill: "#0284c7" }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={fmt}
+                  />
+                  {/* Right Y-Axis for Percentage Rates (0 - 100) */}
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    tick={{ fontSize: 10, fontWeight: 600, fill: "#10b981" }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(v) => `${v}%`}
+                  />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (!active || !payload || !payload.length) return null;
+                      const item = payload[0]?.payload;
 
-                    {/* Tag name + video count */}
-                    <div className="flex-shrink-0 w-36">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-black text-sm" style={{ color: TOKENS.text }}>{tag.tag}</span>
-                        {isNo1 && (
-                          <span
-                            className="px-1.5 py-0.5 rounded font-black text-white"
-                            style={{ background: catColor, fontSize: 8 }}
-                          >
-                            TOP
-                          </span>
-                        )}
-                      </div>
-                      <span className="font-medium" style={{ color: TOKENS.textMuted, fontSize: 10 }}>
-                        {fmt(tag.videoCount)} video
-                      </span>
-                    </div>
+                      return (
+                        <div className="bg-white dark:bg-neutral-900 border border-stone-200 dark:border-neutral-700 rounded-xl p-3 shadow-lg text-xs space-y-2 min-w-[210px]">
+                          <div className="flex items-center justify-between pb-1.5 border-b border-stone-100 dark:border-neutral-800">
+                            <span className="font-bold text-stone-900 dark:text-white font-mono text-sm">
+                              {item.fullTag}
+                            </span>
+                            <span className="text-[10px] text-stone-400 font-mono">
+                              {fmt(item.videoCount)} video
+                            </span>
+                          </div>
 
-                    {/* Progress bar */}
-                    <div className="flex-1 flex items-center gap-2.5">
-                      <div
-                        className="flex-1 relative h-6 rounded-lg overflow-hidden"
-                        style={{ background: '#ECEAE7' }}
-                      >
-                        <div
-                          className="h-full rounded-lg transition-all duration-500"
-                          style={{
-                            width: `${pct}%`,
-                            background: isNo1 ? catColor : `${catColor}55`,
-                          }}
-                        />
-                        {/* Uses label — sits on top of bar */}
-                        <div className="absolute inset-0 flex items-center px-2.5">
-                          <span
-                            className="font-bold text-xs"
-                            style={{ color: pct > 48 ? '#fff' : TOKENS.text }}
-                          >
-                            {fmt(tag.uses)} uses
-                          </span>
+                          <div className="space-y-1 font-mono text-xs">
+                            <div className="flex items-center justify-between text-sky-600 dark:text-sky-400 font-bold">
+                              <span>Penggunaan:</span>
+                              <span>{fmt(item.uses)} uses</span>
+                            </div>
+                            <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400 font-bold">
+                              <span>Pertumbuhan:</span>
+                              <span>{item.growth >= 0 ? '+' : ''}{item.growth}%</span>
+                            </div>
+                            <div className="flex items-center justify-between text-amber-600 dark:text-amber-400 font-bold">
+                              <span>Engagement Rate:</span>
+                              <span>{item.engagement}%</span>
+                            </div>
+                            <div className="flex items-center justify-between text-stone-500 dark:text-neutral-400 pt-1 border-t border-stone-100 dark:border-neutral-800 text-[11px]">
+                              <span>Rata-rata Views:</span>
+                              <span>{fmt(item.avgViews)}</span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Stats — avg views + engagement */}
-                    <div className="hidden md:flex items-center gap-4 flex-shrink-0">
-                      <div className="text-right min-w-[54px]">
-                        <p className="font-black text-sm" style={{ color: TOKENS.text }}>{fmt(tag.avgViews)}</p>
-                        <p className="font-medium" style={{ color: TOKENS.textMuted, fontSize: 9 }}>avg views</p>
-                      </div>
-                      <div className="text-right min-w-[42px]">
-                        <p className="font-black text-sm" style={{ color: TOKENS.text }}>{tag.engagement}%</p>
-                        <p className="font-medium" style={{ color: TOKENS.textMuted, fontSize: 9 }}>eng. rate</p>
-                      </div>
-
-                      {/* Trend badge */}
-                      <span
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-black min-w-[64px] justify-center"
-                        style={{ background: tc.bg, color: tc.text, border: `1px solid ${tc.border}` }}
-                      >
-                        {tag.trend === 'hot' ? <Flame className="w-2.5 h-2.5 fill-current" />
-                          : tag.trend === 'up' ? <TrendingUp className="w-2.5 h-2.5" />
-                          : tag.trend === 'down' ? <TrendingDown className="w-2.5 h-2.5" />
-                          : null}
-                        {tag.weekGrowth >= 0 ? '+' : ''}{tag.weekGrowth}%
-                      </span>
-                    </div>
-
-                    {/* Expand chevron */}
-                    <div className="ml-1 flex-shrink-0" style={{ color: TOKENS.textMuted }}>
-                      {isExpand ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    </div>
-                  </div>
-                </div>
-
-                {/* ── Expanded detail ── */}
-                {isExpand && (
-                  <div
-                    className="mt-1 mb-1 rounded-xl overflow-hidden"
-                    style={{ background: `${catColor}06`, border: `1px solid ${catColor}20` }}
-                  >
-                    {/* 4 stat mini-cards */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 pb-3">
-                      {[
-                        { label: 'Total Uses', value: fmt(tag.uses), accent: catColor },
-                        { label: 'Avg Views/Video', value: fmt(tag.avgViews), accent: TOKENS.accent },
-                        { label: 'Engagement Rate', value: tag.engagement + '%', accent: TOKENS.positive },
-                        { label: 'Total Video', value: fmt(tag.videoCount), accent: TOKENS.textSubtle },
-                      ].map((s, si) => (
-                        <div
-                          key={si}
-                          className="p-3 rounded-xl"
-                          style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
-                        >
-                          <p className="text-xs font-semibold mb-1" style={{ color: TOKENS.textMuted }}>{s.label}</p>
-                          <p className="font-black text-xl" style={{ color: s.accent }}>{s.value}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Status bar */}
-                    <div
-                      className="mx-4 mb-3 px-4 py-2.5 rounded-xl flex items-center justify-between"
-                      style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.07)' }}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span style={{ color: catColor }} className="inline-flex"><Hash className="w-4 h-4" /></span>
-                        <span className="font-black text-sm" style={{ color: catColor }}>{tag.tag}</span>
-                        <span style={{ color: TOKENS.textMuted }}>·</span>
-                        <span className="text-xs font-semibold" style={{ color: TOKENS.textMuted }}>
-                          Status: <span style={{ color: tc.text, fontWeight: 800 }}>{tc.label}</span>
-                        </span>
-                      </div>
-                      <span
-                        className="text-xs font-black px-2.5 py-1 rounded-lg"
-                        style={{ background: tc.bg, color: tc.text, border: `1px solid ${tc.border}` }}
-                      >
-                        {tag.weekGrowth >= 0 ? '+' : ''}{tag.weekGrowth}% 7 hari
-                      </span>
-                    </div>
-
-                    {/* Video list */}
-                    <div className="flex items-center gap-2 px-4 mb-2.5">
-                      <div
-                        className="w-6 h-6 rounded-md flex items-center justify-center"
-                        style={{ background: catColor }}
-                      >
-                        <Video className="w-3 h-3 text-white" />
-                      </div>
-                      <p className="font-black text-sm" style={{ color: TOKENS.text }}>
-                        Video dengan{' '}
-                        <span style={{ color: catColor }}>{tag.tag}</span>
-                      </p>
-                      <span
-                        className="text-xs px-1.5 py-0.5 rounded-md font-bold"
-                        style={{ background: 'rgba(0,0,0,0.06)', color: TOKENS.textMuted }}
-                      >
-                        {loadingVideos[tag.tag] ? '...' : (tagVideos[tag.tag] || []).length} video
-                      </span>
-                    </div>
-
-                    {loadingVideos[tag.tag] ? (
-                      <div className="flex items-center justify-center py-8 w-full col-span-full">
-                        <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: `${catColor} transparent ${catColor} ${catColor}` }} />
-                        <span className="text-xs font-bold ml-2" style={{ color: TOKENS.textMuted }}>Memuat video terkait...</span>
-                      </div>
-                    ) : (tagVideos[tag.tag] || []).length === 0 ? (
-                      <div className="text-center py-6 w-full col-span-full">
-                        <span className="text-xs font-bold" style={{ color: TOKENS.textMuted }}>Tidak ada video terkait ditemukan</span>
-                      </div>
-                    ) : (
-                      <div className="px-4 pb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 w-full">
-                        {(tagVideos[tag.tag] || []).map((v, vi) => (
-                          <VideoMiniCard key={v.id} v={v} color={catColor} rank={vi + 1} />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-
-          {sortedTags.length === 0 && (
-            <div className="py-14 text-center">
-              <p className="font-bold text-sm" style={{ color: TOKENS.textMuted }}>
-                Tidak ada hashtag yang cocok dengan pencarian
-              </p>
+                      );
+                    }}
+                  />
+                  {visibleSeries.uses && (
+                    <Bar
+                      yAxisId="left"
+                      dataKey="uses"
+                      name="Penggunaan"
+                      fill="#0284c7"
+                      radius={[6, 6, 0, 0]}
+                      maxBarSize={38}
+                    />
+                  )}
+                  {visibleSeries.growth && (
+                    <Line
+                      yAxisId="right"
+                      type="monotone"
+                      dataKey="growth"
+                      name="Pertumbuhan (%)"
+                      stroke="#10b981"
+                      strokeWidth={2.5}
+                      strokeDasharray="4 4"
+                      dot={{ r: 3.5, fill: "#10b981", strokeWidth: 2, stroke: "#fff" }}
+                      activeDot={{ r: 6, fill: "#10b981", stroke: "#fff", strokeWidth: 2 }}
+                    />
+                  )}
+                  {visibleSeries.engagement && (
+                    <Line
+                      yAxisId="right"
+                      type="monotone"
+                      dataKey="engagement"
+                      name="Engagement (%)"
+                      stroke="#f59e0b"
+                      strokeWidth={2.5}
+                      dot={{ r: 3.5, fill: "#f59e0b", strokeWidth: 2, stroke: "#fff" }}
+                      activeDot={{ r: 6, fill: "#f59e0b", stroke: "#fff", strokeWidth: 2 }}
+                    />
+                  )}
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="py-8 text-center text-xs text-stone-400">
+              Tidak ada data untuk grafik
             </div>
           )}
+        </div>
+      </div>
+
+      {/* ── 2. Top 10 Hashtag Rows Panel with Blue Bars ── */}
+      <div className="rounded-2xl bg-white dark:bg-neutral-900 border border-stone-200/80 dark:border-neutral-800 shadow-2xs overflow-hidden">
+        <div className="p-6">
+          {/* Panel header */}
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-sky-600 text-white shadow-sm">
+                <CatIcon className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <h2 className="font-black text-base text-stone-900 dark:text-white">
+                    Top 10 Hashtag
+                  </h2>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/60">
+                    {activeCategory}
+                  </span>
+                </div>
+                <p className="text-xs text-stone-500 dark:text-neutral-400">
+                  <span className="font-mono font-bold text-stone-700 dark:text-neutral-300">{fmt(catData?.tags?.length || 0)}</span> total hashtags ·{' '}
+                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                    {(catData?.weekGrowth || 0) >= 0 ? '+' : ''}{catData?.weekGrowth || 0}% tren mingguan
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            <div className="text-xs font-mono text-stone-400 dark:text-neutral-500">
+              Klik baris hashtag untuk melihat sampel video & detail lengkap
+            </div>
+          </div>
+
+          {/* Hashtag rows */}
+          <div className="space-y-2">
+            {topTags.map((tag, idx) => {
+              const maxUses = topTags[0]?.uses || 1;
+              const pct = Math.max(10, (tag.uses / maxUses) * 100);
+              const isNo1 = idx === 0;
+              const tc = getTrendConfig(tag.trend);
+              const isExpand = expandedTag === tag.tag;
+
+              return (
+                <div key={tag.tag} className="transition-all duration-150">
+                  {/* Row */}
+                  <div
+                    onClick={() => handleToggleExpand(tag.tag)}
+                    className={`group cursor-pointer rounded-xl p-3 border transition-all duration-150 ${
+                      isExpand
+                        ? 'bg-sky-50/40 dark:bg-sky-950/20 border-sky-300 dark:border-sky-700 shadow-2xs'
+                        : 'bg-white dark:bg-neutral-900 border-stone-200/70 dark:border-neutral-800 hover:border-sky-300 dark:hover:border-sky-700 hover:bg-sky-50/20 dark:hover:bg-sky-950/10'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      {/* Rank */}
+                      <div
+                        className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 font-mono font-bold text-xs ${
+                          isNo1
+                            ? 'bg-sky-600 text-white shadow-2xs'
+                            : 'bg-stone-100 dark:bg-neutral-800 text-stone-600 dark:text-neutral-400'
+                        }`}
+                      >
+                        {idx + 1}
+                      </div>
+
+                      {/* Tag name + video count */}
+                      <div className="flex-shrink-0 w-36 sm:w-44">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-xs sm:text-sm text-stone-900 dark:text-white truncate">
+                            {tag.tag}
+                          </span>
+                          {isNo1 && (
+                            <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-sky-600 text-white shadow-2xs">
+                              TOP
+                            </span>
+                          )}
+                        </div>
+                        <span className="font-mono text-[10px] text-stone-400 dark:text-neutral-500">
+                          {fmt(tag.videoCount)} video terindeks
+                        </span>
+                      </div>
+
+                      {/* Blue Progress Bar (Changed from black to blue!) */}
+                      <div className="flex-1 min-w-[100px] flex items-center gap-2">
+                        <div className="flex-1 relative h-6 rounded-lg bg-sky-50 dark:bg-sky-950/40 border border-sky-100 dark:border-sky-900/50 overflow-hidden">
+                          <div
+                            className={`h-full rounded-lg transition-all duration-500 ${
+                              isNo1
+                                ? 'bg-sky-600 dark:bg-sky-500'
+                                : 'bg-sky-500/85 dark:bg-sky-500/70'
+                            }`}
+                            style={{ width: `${pct}%` }}
+                          />
+                          {/* Uses label inside bar */}
+                          <div className="absolute inset-0 flex items-center px-2.5">
+                            <span className="font-mono font-bold text-[11px] text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)] select-none">
+                              {fmt(tag.uses)} uses
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Stats — avg views + engagement */}
+                      <div className="hidden md:flex items-center gap-4 flex-shrink-0">
+                        <div className="text-right min-w-[60px]">
+                          <p className="font-mono font-bold text-xs text-stone-900 dark:text-white">{fmt(tag.avgViews)}</p>
+                          <p className="text-[9px] text-stone-400 dark:text-neutral-500 font-medium">avg views</p>
+                        </div>
+                        <div className="text-right min-w-[48px]">
+                          <p className="font-mono font-bold text-xs text-amber-600 dark:text-amber-400">{tag.engagement}%</p>
+                          <p className="text-[9px] text-stone-400 dark:text-neutral-500 font-medium">eng. rate</p>
+                        </div>
+
+                        {/* Trend badge */}
+                        <span
+                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold min-w-[68px] justify-center"
+                          style={{ background: tc.bg, color: tc.text, border: `1px solid ${tc.border}` }}
+                        >
+                          {tag.trend === 'hot' ? <Flame className="w-2.5 h-2.5 fill-current" />
+                            : tag.trend === 'up' ? <TrendingUp className="w-2.5 h-2.5" />
+                            : tag.trend === 'down' ? <TrendingDown className="w-2.5 h-2.5" />
+                            : null}
+                          {tag.weekGrowth >= 0 ? '+' : ''}{tag.weekGrowth}%
+                        </span>
+                      </div>
+
+                      {/* Expand chevron */}
+                      <div className="ml-1 flex-shrink-0 text-stone-400 dark:text-neutral-500">
+                        {isExpand ? <ChevronUp className="w-4 h-4 text-sky-600" /> : <ChevronDown className="w-4 h-4" />}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ── 3. Redesigned Highly Readable Expand Detail Drawer ── */}
+                  {isExpand && (
+                    <div className="mt-2 mb-3 p-5 rounded-2xl bg-stone-50/90 dark:bg-neutral-850 border border-stone-200 dark:border-neutral-750 shadow-xs space-y-5">
+                      {/* Header status bar */}
+                      <div className="flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-stone-200/80 dark:border-neutral-750">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-sky-600 text-white font-mono font-bold text-xs">
+                            #{idx + 1}
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-sm text-stone-900 dark:text-white flex items-center gap-2">
+                              {tag.tag}
+                              <span className="text-[10px] font-mono font-normal px-2 py-0.2 rounded-full bg-stone-200/70 dark:bg-neutral-700 text-stone-700 dark:text-neutral-300">
+                                {tag.category || activeCategory}
+                              </span>
+                            </h4>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-stone-500 dark:text-neutral-400">
+                            Status Tren: <span style={{ color: tc.text }} className="font-bold">{tc.label}</span>
+                          </span>
+                          <span
+                            className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-md"
+                            style={{ background: tc.bg, color: tc.text, border: `1px solid ${tc.border}` }}
+                          >
+                            {tag.weekGrowth >= 0 ? '+' : ''}{tag.weekGrowth}% 7 hari
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 4 Clean High-Contrast Metric Cards */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div className="p-3.5 rounded-xl bg-white dark:bg-neutral-900 border border-sky-100 dark:border-sky-950/60 shadow-2xs">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-sky-700 dark:text-sky-400">
+                            Total Penggunaan
+                          </span>
+                          <p className="font-mono font-black text-xl text-sky-600 dark:text-sky-400 mt-1">
+                            {fmt(tag.uses)}
+                          </p>
+                          <p className="text-[10px] text-stone-400 dark:text-neutral-500 mt-0.5">
+                            {fmt(tag.videoCount)} video terindeks
+                          </p>
+                        </div>
+
+                        <div className="p-3.5 rounded-xl bg-white dark:bg-neutral-900 border border-stone-200/80 dark:border-neutral-800 shadow-2xs">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-neutral-400">
+                            Rata-rata Tayangan
+                          </span>
+                          <p className="font-mono font-black text-xl text-stone-900 dark:text-white mt-1">
+                            {fmt(tag.avgViews)}
+                          </p>
+                          <p className="text-[10px] text-stone-400 dark:text-neutral-500 mt-0.5">
+                            Views per video
+                          </p>
+                        </div>
+
+                        <div className="p-3.5 rounded-xl bg-white dark:bg-neutral-900 border border-amber-100 dark:border-amber-950/60 shadow-2xs">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                            Engagement Rate
+                          </span>
+                          <p className="font-mono font-black text-xl text-amber-600 dark:text-amber-400 mt-1">
+                            {tag.engagement}%
+                          </p>
+                          <p className="text-[10px] text-stone-400 dark:text-neutral-500 mt-0.5">
+                            Rasio interaksi audiens
+                          </p>
+                        </div>
+
+                        <div className="p-3.5 rounded-xl bg-white dark:bg-neutral-900 border border-emerald-100 dark:border-emerald-950/60 shadow-2xs">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                            Laju Pertumbuhan
+                          </span>
+                          <p className="font-mono font-black text-xl text-emerald-600 dark:text-emerald-400 mt-1">
+                            {tag.weekGrowth >= 0 ? '+' : ''}{tag.weekGrowth}%
+                          </p>
+                          <p className="text-[10px] text-stone-400 dark:text-neutral-500 mt-0.5">
+                            Perubahan 7 hari
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Video List Header & Grid */}
+                      <div className="space-y-3 pt-1">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-5 h-5 rounded-md bg-sky-100 dark:bg-sky-950 text-sky-600 dark:text-sky-400 flex items-center justify-center">
+                              <Video className="w-3 h-3" />
+                            </div>
+                            <h5 className="font-bold text-xs text-stone-900 dark:text-white">
+                              Contoh Video Populer dengan Hashtag {tag.tag}
+                            </h5>
+                          </div>
+                          <span className="text-[10px] font-mono text-stone-400">
+                            {loadingVideos[tag.tag] ? 'Memuat sampel video...' : `${(tagVideos[tag.tag] || []).length} video ditemukan`}
+                          </span>
+                        </div>
+
+                        {loadingVideos[tag.tag] ? (
+                          <div className="flex items-center justify-center py-10 bg-white dark:bg-neutral-900 rounded-xl border border-stone-200/70 dark:border-neutral-800">
+                            <div className="w-5 h-5 rounded-full border-2 border-sky-600 border-t-transparent animate-spin" />
+                            <span className="text-xs font-bold text-stone-500 dark:text-neutral-400 ml-2.5">
+                              Mengambil cuplikan video teratas...
+                            </span>
+                          </div>
+                        ) : (tagVideos[tag.tag] || []).length === 0 ? (
+                          <div className="text-center py-8 bg-white dark:bg-neutral-900 rounded-xl border border-stone-200/70 dark:border-neutral-800">
+                            <span className="text-xs text-stone-400 dark:text-neutral-500">
+                              Tidak ada cuplikan video yang terindeks untuk hashtag ini
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                            {(tagVideos[tag.tag] || []).map((v, vi) => (
+                              <VideoMiniCard key={v.id} v={v} color="#0284c7" rank={vi + 1} />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {topTags.length === 0 && (
+              <div className="py-12 text-center rounded-xl bg-stone-50 dark:bg-neutral-850 border border-dashed border-stone-200 dark:border-neutral-800">
+                <p className="text-xs font-bold text-stone-400 dark:text-neutral-500">
+                  Tidak ada hashtag yang cocok dengan pencarian &quot;{searchQuery}&quot;
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 }
-

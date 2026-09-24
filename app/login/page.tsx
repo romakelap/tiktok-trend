@@ -6,13 +6,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 import {
   AuthAlert,
   AuthBrand,
   AuthDivider,
   AuthInput,
-  AuthPanelBg,
   AuthPasswordInput,
   AuthSocialButtons,
   AuthSplitLayout,
@@ -26,7 +26,6 @@ import { loginSchema, type LoginFormValues } from "@/lib/schemas/auth";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [mounted, setMounted] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
   const registered = searchParams.get("registered") === "true";
@@ -41,13 +40,11 @@ function LoginForm() {
     defaultValues: { email: "", password: "", rememberMe: false },
   });
 
-  // Surface session-expired warnings set by other parts of the app
   useEffect(() => {
-    setMounted(true);
     if (typeof window === "undefined") return;
     const expired = sessionStorage.getItem("session_expired");
     if (expired === "true") {
-      toast.error("Your session has expired. Please login again.");
+      toast.error("Sesi Anda telah berakhir. Silakan login kembali.");
       sessionStorage.removeItem("session_expired");
     }
   }, []);
@@ -61,107 +58,118 @@ function LoginForm() {
       });
       router.push(redirectTo);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Login failed";
+      const message = err instanceof Error ? err.message : "Login gagal dilakukan.";
       setServerError(message);
     }
   };
 
   const formPanel = (
-    <>
-      <AuthPanelBg variant="light" />
+    <div className="w-full max-w-md mx-auto flex flex-col justify-between flex-1 py-4">
+      
+      {/* Top Brand Bar */}
+      <div className="flex items-center justify-between pb-8">
+        <AuthBrand variant="light" />
+        <Link
+          href={ROUTES.landing}
+          className="text-xs font-semibold text-stone-500 hover:text-black transition-colors"
+        >
+          ← Beranda
+        </Link>
+      </div>
 
-      <AuthBrand variant="light" />
-
-      <div
-        className={`relative z-10 flex-1 flex items-center justify-center transition-all duration-700 ${
-          mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-        }`}
+      {/* Form Content */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
+        className="space-y-6 my-auto"
       >
-        <div className="w-full max-w-sm">
-          <div className="mb-8">
-            <h1
-              className="text-4xl font-black mb-2 leading-tight"
-              style={{ color: "#111", fontFamily: "'DM Serif Display', serif" }}
-            >
-              Login
-            </h1>
-            <p className="text-sm" style={{ color: "#888" }}>
-              Welcome back! Please enter your details.
-            </p>
-          </div>
-
-          <div className="mb-6">
-            <AuthSocialButtons />
-          </div>
-
-          <div className="mb-6">
-            <AuthDivider />
-          </div>
-
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {registered ? (
-              <AuthAlert variant="success">
-                Registration successful. Please login.
-              </AuthAlert>
-            ) : null}
-
-            <AuthInput
-              label="Email"
-              type="email"
-              placeholder="you@example.com"
-              autoComplete="email"
-              {...register("email")}
-              error={errors.email?.message}
-            />
-
-            <AuthPasswordInput
-              placeholder="••••••••"
-              autoComplete="current-password"
-              {...register("password")}
-              error={errors.password?.message}
-            />
-
-            {serverError ? (
-              <AuthAlert variant="error">{serverError}</AuthAlert>
-            ) : null}
-
-            <div className="flex items-center justify-between pt-1">
-              <label className="flex items-center gap-2.5 cursor-pointer text-sm text-neutral-600">
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 rounded border-neutral-300 accent-black"
-                  {...register("rememberMe")}
-                />
-                Remember me
-              </label>
-              <Link
-                href={ROUTES.forgotPassword}
-                className="text-sm font-black transition-opacity hover:opacity-50"
-                style={{ color: "#333" }}
-              >
-                Forgot password?
-              </Link>
-            </div>
-
-            <AuthSubmitButton loading={isSubmitting}>Login</AuthSubmitButton>
-          </form>
-
-          <p
-            className="text-sm text-center mt-7"
-            style={{ color: "#999" }}
-          >
-            Don&apos;t have an account?{" "}
-            <Link
-              href={ROUTES.signup}
-              className="font-black transition-opacity hover:opacity-60"
-              style={{ color: "#111" }}
-            >
-              Sign up for free →
-            </Link>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-black tracking-tight mb-1.5">
+            Masuk ke Akun Anda
+          </h1>
+          <p className="text-xs sm:text-sm text-stone-500">
+            Akses dashboard analitik dan eksplorasi data tren TikTok.
           </p>
         </div>
+
+        {/* Social / OAuth TikTok Sign In */}
+        <div>
+          <AuthSocialButtons providers={["tiktok"]} />
+        </div>
+
+        <AuthDivider label="atau masuk dengan email" />
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {registered ? (
+            <AuthAlert variant="success">
+              Registrasi akun berhasil! Silakan masuk dengan kredensial Anda.
+            </AuthAlert>
+          ) : null}
+
+          <AuthInput
+            label="Alamat Email"
+            type="email"
+            placeholder="nama@email.com"
+            autoComplete="email"
+            {...register("email")}
+            error={errors.email?.message}
+          />
+
+          <AuthPasswordInput
+            label="Kata Sandi"
+            placeholder="••••••••"
+            autoComplete="current-password"
+            {...register("password")}
+            error={errors.password?.message}
+          />
+
+          {serverError ? (
+            <AuthAlert variant="error">{serverError}</AuthAlert>
+          ) : null}
+
+          <div className="flex items-center justify-between pt-0.5 text-xs">
+            <label className="flex items-center gap-2 cursor-pointer text-stone-600 select-none">
+              <input
+                type="checkbox"
+                className="w-4 h-4 rounded border-stone-300 accent-black text-black cursor-pointer"
+                {...register("rememberMe")}
+              />
+              <span>Ingat saya</span>
+            </label>
+            <Link
+              href={ROUTES.forgotPassword}
+              className="font-semibold text-stone-600 hover:text-black transition-colors"
+            >
+              Lupa kata sandi?
+            </Link>
+          </div>
+
+          <div className="pt-2">
+            <AuthSubmitButton loading={isSubmitting}>
+              Masuk ke Dashboard
+            </AuthSubmitButton>
+          </div>
+        </form>
+
+        <p className="text-xs text-center text-stone-500 pt-2">
+          Belum memiliki akun?{" "}
+          <Link
+            href={ROUTES.signup}
+            className="font-bold text-black hover:underline"
+          >
+            Daftar gratis di sini →
+          </Link>
+        </p>
+      </motion.div>
+
+      {/* Footer System Info */}
+      <div className="pt-8 border-t border-stone-200/60 flex items-center justify-between text-[10px] font-mono text-stone-400">
+        <span>TIKTREND BI PLATFORM</span>
+        <span>SPRING BOOT + FASTAPI</span>
       </div>
-    </>
+
+    </div>
   );
 
   return (

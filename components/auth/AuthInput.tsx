@@ -15,21 +15,17 @@ type AuthInputProps = Omit<
 };
 
 /**
- * Styled label + input pair with an animated focus ring and inline error
- * message. Forwards refs so it works with `react-hook-form`'s `register`.
+ * Clean, modern input field with focus state matching Landing Page design system.
  */
 export const AuthInput = React.forwardRef<HTMLInputElement, AuthInputProps>(
   function AuthInput(
     { label, error, rightSlot, className, ...inputProps },
     ref
   ) {
-    const [focused, setFocused] = React.useState(false);
-
     return (
-      <div className={cn("space-y-1.5", className)}>
+      <div className={cn("space-y-1.5 text-left", className)}>
         <label
-          className="block text-xs font-black uppercase tracking-widest"
-          style={{ color: "#555" }}
+          className="block text-xs font-semibold text-stone-700 tracking-tight"
           htmlFor={inputProps.id || inputProps.name}
         >
           {label}
@@ -39,42 +35,22 @@ export const AuthInput = React.forwardRef<HTMLInputElement, AuthInputProps>(
             ref={ref}
             id={inputProps.id || inputProps.name}
             {...inputProps}
-            onFocus={(e) => {
-              setFocused(true);
-              inputProps.onFocus?.(e);
-            }}
-            onBlur={(e) => {
-              setFocused(false);
-              inputProps.onBlur?.(e);
-            }}
             className={cn(
-              "w-full px-4 py-3 rounded-xl outline-none transition-all duration-250",
-              rightSlot ? "pr-12" : undefined
+              "w-full px-3.5 py-2.5 sm:py-3 rounded-xl bg-white border text-sm text-black placeholder:text-stone-400 outline-none transition-all duration-200 shadow-2xs",
+              error
+                ? "border-red-500 focus:ring-2 focus:ring-red-500/10"
+                : "border-stone-200/90 hover:border-stone-300 focus:border-black focus:ring-2 focus:ring-black/5",
+              rightSlot ? "pr-11" : undefined
             )}
-            style={{
-              background: "#fff",
-              border: error
-                ? "1.5px solid #b91c1c"
-                : focused
-                  ? "1.5px solid #333"
-                  : "1px solid rgba(0,0,0,0.12)",
-              boxShadow: focused
-                ? "0 0 0 3px rgba(51,51,51,0.08), 0 2px 10px rgba(0,0,0,0.07)"
-                : "0 2px 6px rgba(0,0,0,0.04)",
-              color: "#111",
-              fontSize: "14px",
-            }}
           />
           {rightSlot ? (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-stone-400 hover:text-stone-600 transition-colors">
               {rightSlot}
             </div>
           ) : null}
         </div>
         {error ? (
-          <p className="text-xs font-semibold" style={{ color: "#b91c1c" }}>
-            {error}
-          </p>
+          <p className="text-xs font-medium text-red-600 mt-1">{error}</p>
         ) : null}
       </div>
     );

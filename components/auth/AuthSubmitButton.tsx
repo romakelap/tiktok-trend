@@ -10,12 +10,11 @@ type AuthSubmitButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 /**
- * Black submit button used across auth forms. Shows a spinner when `loading`
- * and an arrow icon when idle.
+ * Clean primary black button used across auth forms matching Landing Page styling.
  */
 export function AuthSubmitButton({
   loading = false,
-  children = "Continue",
+  children = "Lanjutkan",
   disabled,
   ...buttonProps
 }: AuthSubmitButtonProps) {
@@ -24,38 +23,19 @@ export function AuthSubmitButton({
       type="submit"
       disabled={loading || disabled}
       {...buttonProps}
-      className="group relative w-full py-4 rounded-xl text-white font-black text-sm uppercase tracking-widest overflow-hidden transition-all duration-300 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
-      style={{
-        background: "#111",
-        border: "1px solid rgba(255,255,255,0.12)",
-        boxShadow:
-          "0 0 24px rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.25)",
-      }}
+      className="group relative w-full py-3 sm:py-3.5 px-5 rounded-full bg-black text-white font-semibold text-xs sm:text-sm tracking-tight overflow-hidden transition-all duration-200 hover:bg-stone-800 disabled:opacity-60 disabled:cursor-not-allowed active:scale-98 shadow-sm flex items-center justify-center gap-2 cursor-pointer"
     >
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.08) 50%,transparent 100%)",
-            animation: "shimmer 2s infinite",
-          }}
-        />
-      </div>
-      <span className="relative z-10 flex items-center justify-center gap-2">
-        {loading ? (
-          <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Please wait...
-          </>
-        ) : (
-          <>
-            {children}
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
-          </>
-        )}
-      </span>
+      {loading ? (
+        <>
+          <Loader2 className="w-4 h-4 animate-spin text-stone-300" />
+          <span>Memproses...</span>
+        </>
+      ) : (
+        <>
+          <span>{children}</span>
+          <ArrowRight className="w-4 h-4 text-stone-400 group-hover:translate-x-0.5 transition-transform" />
+        </>
+      )}
     </button>
   );
 }

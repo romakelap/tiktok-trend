@@ -1,7 +1,5 @@
 import React from 'react';
 import { Globe, Flame, Zap, TrendingUp } from "lucide-react";
-import { GridBg } from "@/components/layout/GridBg";
-import { TOKENS } from "@/lib/design-tokens";
 import { CatData, fmt } from "@/lib/hashtag/mock-data";
 
 export function GlobalKpis({ allData = [] }: { allData?: CatData[] }) {
@@ -20,46 +18,69 @@ export function GlobalKpis({ allData = [] }: { allData?: CatData[] }) {
     : null;
 
   const kpiItems = [
-    { label: 'Total Hashtags', value: fmt(uniqueHashtagCount), sub: 'Seluruh kategori', icon: Globe, acc: TOKENS.accent },
-    { label: 'Hashtag Hot', value: String(hotCount), sub: 'Trending minggu ini', icon: Flame, acc: TOKENS.negative },
-    { label: 'Avg Engagement', value: avgEngagement + '%', sub: 'Rata-rata semua tag', icon: Zap, acc: TOKENS.warning },
-    { label: 'Fastest Growing', value: fastestTag ? fastestTag.tag : '-', sub: fastestTag ? '+' + fastestTag.weekGrowth + '% minggu ini' : 'Tidak ada data', icon: TrendingUp, acc: TOKENS.positive },
+    {
+      label: 'Total Hashtags',
+      value: fmt(uniqueHashtagCount),
+      sub: 'Seluruh kategori',
+      icon: Globe,
+      color: 'text-sky-600 dark:text-sky-400',
+      bg: 'bg-sky-50 dark:bg-sky-950/40 border-sky-200/60 dark:border-sky-800/60',
+      badge: 'Database Aktif'
+    },
+    {
+      label: 'Hashtag Hot',
+      value: String(hotCount),
+      sub: 'Lonjakan tren > 15%',
+      icon: Flame,
+      color: 'text-rose-600 dark:text-rose-400',
+      bg: 'bg-rose-50 dark:bg-rose-950/40 border-rose-200/60 dark:border-rose-800/60',
+      badge: 'Trending Minggu Ini'
+    },
+    {
+      label: 'Avg Engagement',
+      value: avgEngagement + '%',
+      sub: 'Rata-rata interaksi',
+      icon: Zap,
+      color: 'text-amber-600 dark:text-amber-400',
+      bg: 'bg-amber-50 dark:bg-amber-950/40 border-amber-200/60 dark:border-amber-800/60',
+      badge: 'Rata-rata Semua Tag'
+    },
+    {
+      label: 'Fastest Growing',
+      value: fastestTag ? fastestTag.tag : '-',
+      sub: fastestTag ? `+${fastestTag.weekGrowth}% minggu ini` : 'Tidak ada data',
+      icon: TrendingUp,
+      color: 'text-emerald-600 dark:text-emerald-400',
+      bg: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/60 dark:border-emerald-800/60',
+      badge: 'Pertumbuhan Tertinggi'
+    },
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
       {kpiItems.map((k, i) => {
         const IconComponent = k.icon;
         return (
           <div
             key={i}
-            className="relative p-5 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
-            style={{
-              background: TOKENS.card,
-              border: `1px solid ${TOKENS.cardBorder}`,
-              boxShadow: '0 2px 16px rgba(0,0,0,0.05),inset 0 1px 0 rgba(255,255,255,1)'
-            }}
+            className="p-4.5 rounded-2xl bg-white dark:bg-neutral-900 border border-stone-200/80 dark:border-neutral-800 shadow-2xs transition-all hover:shadow-sm"
           >
-            <GridBg theme="light" />
-            <div className="relative z-10">
-              <div
-                className="w-11 h-11 rounded-xl flex items-center justify-center mb-3"
-                style={{
-                  background: k.acc,
-                  boxShadow: `0 2px 8px ${k.acc}40`
-                }}
-              >
-                <IconComponent className="w-5 h-5 text-white" />
-              </div>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-0.5" style={{ color: TOKENS.textMuted }}>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-neutral-500">
                 {k.label}
-              </p>
-              <p className="text-2xl font-black mb-0.5" style={{ color: TOKENS.text }}>
-                {k.value}
-              </p>
-              <p className="text-xs" style={{ color: TOKENS.textMuted }}>
-                {k.sub}
-              </p>
+              </span>
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center border ${k.bg} ${k.color}`}>
+                <IconComponent className="w-4 h-4" />
+              </div>
+            </div>
+            <p className="text-2xl font-black font-mono tracking-tight text-stone-900 dark:text-white mb-1 truncate">
+              {k.value}
+            </p>
+            <div className="flex items-center justify-between text-xs text-stone-500 dark:text-neutral-400 pt-1 border-t border-stone-100 dark:border-neutral-800">
+              <span className="text-[11px] truncate">{k.sub}</span>
+              <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded bg-stone-100 dark:bg-neutral-800 text-stone-600 dark:text-neutral-400">
+                {k.badge}
+              </span>
             </div>
           </div>
         );

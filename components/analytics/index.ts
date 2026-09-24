@@ -18,3 +18,6 @@ export { LSTMForecast } from "./LSTMForecast";
 export { CorrelationHeatmap } from "./CorrelationHeatmap";
 export { RevenueAnalysis } from "./RevenueAnalysis";
 export { VideoDetailModal } from "./VideoDetailModal";
+export { TacticalSynergyHub } from "./TacticalSynergyHub";
+export { OptimalScheduleWindow } from "./OptimalScheduleWindow";
+

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Radar,
   RadarChart,
@@ -8,9 +9,8 @@ import {
   PolarRadiusAxis,
   ResponsiveContainer,
   Tooltip,
-  Legend,
 } from "recharts";
-import { TOKENS } from "@/lib/design-tokens";
+import { Compass } from "lucide-react";
 
 export interface CategoryRadarItem {
   id: string;
@@ -29,11 +29,11 @@ type Props = {
 };
 
 const AXES = [
-  { key: "viewsScore",      label: "Views"      },
-  { key: "engagementScore", label: "Engagement" },
-  { key: "viralScore",      label: "Viral Score"},
-  { key: "revenueScore",    label: "Revenue"    },
-  { key: "volumeScore",     label: "Volume"     },
+  { key: "viewsScore",      label: "Views Vol"   },
+  { key: "engagementScore", label: "Engagement"  },
+  { key: "viralScore",      label: "Viral Velocity" },
+  { key: "revenueScore",    label: "GMV / Revenue" },
+  { key: "volumeScore",     label: "Content Supply" },
 ];
 
 /** Normalize all category values to 0–100 per axis using min-max scaling. */
@@ -45,6 +45,7 @@ function normalize(categories: CategoryRadarItem[]) {
   const maxVideos    = Math.max(...categories.map((c) => c.videos),      1);
 
   return categories.map((c) => ({
+    id:             c.id,
     label:          c.label,
     color:          c.color,
     viewsScore:     Math.round((c.views      / maxViews)   * 100),
@@ -59,31 +60,31 @@ function CustomTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
-    <div
-      className="rounded-xl shadow-xl p-3 text-xs font-bold min-w-[130px]"
-      style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.1)", fontFamily: "'DM Sans',sans-serif" }}
-    >
-      <p className="font-black text-gray-800 mb-2">{d.label}</p>
-      {AXES.map((a) => (
-        <div key={a.key} className="flex justify-between gap-4 mb-0.5">
-          <span className="text-gray-500">{a.label}</span>
-          <span className="font-black text-gray-900">{d[a.key]}</span>
-        </div>
-      ))}
+    <div className="rounded-xl bg-stone-900 text-white p-3.5 text-xs shadow-xl border border-stone-700 min-w-[150px]">
+      <p className="font-bold text-white mb-2 border-b border-stone-800 pb-1.5">{d.subject}</p>
+      {Object.entries(d)
+        .filter(([k]) => k !== "subject")
+        .map(([catName, score]) => (
+          <div key={catName} className="flex justify-between items-center gap-4 py-0.5 text-stone-300">
+            <span className="text-[11px]">{catName}</span>
+            <span className="font-mono font-bold text-white">{String(score)}%</span>
+          </div>
+        ))}
     </div>
   );
 }
 
 export function CategoryRadarChart({ categories, loading }: Props) {
+  const [activeCategory, setActiveCategory] = useState<string | "all">("all");
+
   if (loading || !categories || categories.length === 0) {
     return (
-      <div className="h-72 rounded-2xl animate-pulse" style={{ background: "rgba(0,0,0,0.04)" }} />
+      <div className="h-80 rounded-xl bg-stone-100 dark:bg-neutral-800/50 animate-pulse border border-stone-200 dark:border-neutral-800" />
     );
   }
 
   const normalized = normalize(categories);
 
-  // Build chart data: one row per axis label, each category is a key
   const chartData = AXES.map((axis) => {
     const row: Record<string, any> = { subject: axis.label };
     normalized.forEach((cat) => {
@@ -92,54 +93,84 @@ export function CategoryRadarChart({ categories, loading }: Props) {
     return row;
   });
 
+  const displayedCategories = activeCategory === "all"
+    ? normalized
+    : normalized.filter((c) => c.id === activeCategory);
+
   return (
-    <div
-      className="rounded-2xl p-5 border"
-      style={{
-        background: "#fff",
-        borderColor: TOKENS.divider,
-        boxShadow: "0 1px 6px rgba(0,0,0,0.04)",
-      }}
-    >
-      <div className="mb-1">
-        <h3 className="text-sm font-black" style={{ color: TOKENS.text }}>
-          Category Profile Radar
-        </h3>
-        <p className="text-[11px] mt-0.5" style={{ color: TOKENS.textMuted }}>
-          5 dimensi performa — Views · Engagement · Viral · Revenue · Volume (normalized 0–100)
-        </p>
+    <div className="rounded-xl bg-white dark:bg-neutral-900 border border-stone-200/80 dark:border-neutral-800 shadow-xs overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-4 px-6 py-4 border-b border-stone-200/80 dark:border-neutral-800 bg-stone-50/50 dark:bg-neutral-900/50">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-stone-900 dark:bg-white text-white dark:text-stone-900 flex items-center justify-center">
+            <Compass className="w-4 h-4" strokeWidth={2.2} />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-stone-900 dark:text-white">
+              Category Holistic Profile Radar
+            </h3>
+            <p className="text-xs text-stone-500 dark:text-neutral-400">
+              5 dimensi performa relatif (0–100 Normalized Index)
+            </p>
+          </div>
+        </div>
+
+        {/* Category chips selector */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setActiveCategory("all")}
+            className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+              activeCategory === "all"
+                ? "bg-stone-900 dark:bg-white text-white dark:text-stone-900 shadow-xs"
+                : "bg-stone-100 dark:bg-neutral-800 text-stone-600 dark:text-neutral-400 hover:bg-stone-200"
+            }`}
+          >
+            All 5 Sectors
+          </button>
+          {categories.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => setActiveCategory(c.id)}
+              className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeCategory === c.id
+                  ? "bg-stone-900 dark:bg-white text-white dark:text-stone-900 shadow-xs"
+                  : "bg-stone-100 dark:bg-neutral-800 text-stone-600 dark:text-neutral-400 hover:bg-stone-200"
+              }`}
+            >
+              <span className="w-2 h-2 rounded-full" style={{ background: c.color }} />
+              <span>{c.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div style={{ height: 300 }}>
+      <div className="p-6" style={{ height: 350 }}>
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart data={chartData} margin={{ top: 10, right: 30, bottom: 10, left: 30 }}>
-            <PolarGrid stroke="rgba(0,0,0,0.07)" />
+            <PolarGrid stroke="rgba(0,0,0,0.08)" />
             <PolarAngleAxis
               dataKey="subject"
-              tick={{ fontSize: 11, fontWeight: 700, fill: "#64748b" }}
+              tick={{ fontSize: 11, fontWeight: 700, fill: "rgb(87, 83, 78)" }}
             />
             <PolarRadiusAxis
               angle={90}
               domain={[0, 100]}
-              tick={{ fontSize: 9, fill: "#94a3b8" }}
+              tick={{ fontSize: 9, fill: "rgb(168, 162, 158)" }}
               tickCount={4}
             />
             <Tooltip content={<CustomTooltip />} />
-            <Legend
-              iconType="circle"
-              iconSize={8}
-              wrapperStyle={{ fontSize: 11, fontWeight: 700, paddingTop: 8 }}
-            />
-            {normalized.map((cat) => (
+            {displayedCategories.map((cat) => (
               <Radar
                 key={cat.label}
                 name={cat.label}
                 dataKey={cat.label}
                 stroke={cat.color}
                 fill={cat.color}
-                fillOpacity={0.1}
-                strokeWidth={2}
-                dot={{ r: 3, fill: cat.color, strokeWidth: 0 }}
+                fillOpacity={activeCategory === "all" ? 0.08 : 0.25}
+                strokeWidth={activeCategory === "all" ? 2 : 2.5}
+                dot={{ r: 3.5, fill: cat.color, strokeWidth: 0 }}
               />
             ))}
           </RadarChart>

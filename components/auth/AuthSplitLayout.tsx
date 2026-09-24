@@ -5,15 +5,14 @@ import * as React from "react";
 type AuthSplitLayoutProps = {
   /** Which side the form appears on. */
   formSide?: "left" | "right";
-  /** The form panel (white). */
+  /** The form panel (light). */
   form: React.ReactNode;
-  /** The marketing/preview panel (charcoal). Hidden on small screens. */
+  /** The marketing/preview panel (dark). Hidden on small screens. */
   preview: React.ReactNode;
 };
 
 /**
- * Two-column split layout used by login/signup. The preview panel hides on
- * narrow viewports so the form alone fills the screen.
+ * Two-column split layout for authentication pages consistent with Landing Page design language.
  */
 export function AuthSplitLayout({
   formSide = "right",
@@ -21,37 +20,28 @@ export function AuthSplitLayout({
   preview,
 }: AuthSplitLayoutProps) {
   return (
-    <div
-      className="min-h-screen w-full grid lg:grid-cols-2"
-      style={{ fontFamily: "'DM Sans', sans-serif" }}
-    >
+    <div className="min-h-screen w-full grid lg:grid-cols-12 bg-white selection:bg-black selection:text-white">
       {formSide === "right" ? (
         <>
-          <div
-            className="relative hidden lg:flex flex-col items-center justify-center p-12 overflow-hidden"
-            style={{ background: "#2c2c2c" }}
-          >
+          {/* Left Preview Panel (Desktop only) */}
+          <div className="hidden lg:flex lg:col-span-6 xl:col-span-7 relative flex-col items-center justify-center p-8 lg:p-12 xl:p-16 bg-[#0E0E10] text-white overflow-hidden border-r border-stone-800/80">
             {preview}
           </div>
-          <div
-            className="relative flex flex-col p-8 md:p-12 overflow-hidden"
-            style={{ background: "#f9f9f9" }}
-          >
+
+          {/* Right Form Panel */}
+          <div className="col-span-12 lg:col-span-6 xl:col-span-5 relative flex flex-col justify-between p-6 sm:p-10 md:p-14 bg-stone-50/50 overflow-y-auto">
             {form}
           </div>
         </>
       ) : (
         <>
-          <div
-            className="relative flex flex-col p-8 md:p-12 overflow-hidden"
-            style={{ background: "#f9f9f9" }}
-          >
+          {/* Left Form Panel */}
+          <div className="col-span-12 lg:col-span-6 xl:col-span-5 relative flex flex-col justify-between p-6 sm:p-10 md:p-14 bg-stone-50/50 overflow-y-auto">
             {form}
           </div>
-          <div
-            className="relative hidden lg:flex flex-col items-center justify-center p-12 overflow-hidden"
-            style={{ background: "#2c2c2c" }}
-          >
+
+          {/* Right Preview Panel (Desktop only) */}
+          <div className="hidden lg:flex lg:col-span-6 xl:col-span-7 relative flex-col items-center justify-center p-8 lg:p-12 xl:p-16 bg-[#0E0E10] text-white overflow-hidden border-l border-stone-800/80">
             {preview}
           </div>
         </>

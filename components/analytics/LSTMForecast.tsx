@@ -1,9 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { Sparkles, ArrowRight, Brain } from "lucide-react";
+import { useMemo, useState } from "react";
 import {
-  Area,
+  Activity,
+  Eye,
+  Heart,
+  MessageCircle,
+  Share2,
+  Layers,
+  Sparkles,
+} from "lucide-react";
+import {
+  Bar,
   CartesianGrid,
   ComposedChart,
   Line,
@@ -13,13 +21,10 @@ import {
   YAxis,
 } from "recharts";
 
-import { GridBg } from "@/components/layout/GridBg";
-import { TOKENS } from "@/lib/design-tokens";
 import { formatNum } from "@/lib/analytics/formatters";
+import type { HistoricalDay } from "@/lib/analytics/types";
 
-type MetricKey = "views" | "likes" | "comments" | "shares";
-
-interface ForecastDataPoint {
+export interface ForecastDataPoint {
   date: string;
   predictedViews: number;
   predictedLikes: number;
@@ -28,339 +33,362 @@ interface ForecastDataPoint {
   isForecast: boolean;
 }
 
-const METRIC_DEFS: Record<
-  MetricKey,
-  { label: string; color: string; valKey: string }
-> = {
-  views:    { label: "Views",    color: "#10b981", valKey: "predictedViews"    },
-  likes:    { label: "Likes",    color: "#0ea5e9", valKey: "predictedLikes"    },
-  comments: { label: "Comments", color: "#f59e0b", valKey: "predictedComments" },
-  shares:   { label: "Shares",   color: "#a855f7", valKey: "predictedShares"   },
-};
-
 type LSTMForecastProps = {
   data: ForecastDataPoint[];
+  historicalData?: HistoricalDay[];
   loading?: boolean;
 };
 
-export function LSTMForecast({ data, loading = false }: LSTMForecastProps) {
-  const [selectedMetric, setSelectedMetric] = useState<MetricKey>("views");
-
-  const chartData = data.map((d, index) => {
-    const isForecast = d.isForecast;
-    const valKey = METRIC_DEFS[selectedMetric].valKey as keyof ForecastDataPoint;
-    const val = typeof d[valKey] === "number" ? (d[valKey] as number) : 0;
-
-    const isFirstForecast = isForecast && (index === 0 || !data[index - 1].isForecast);
-    const showInHistory  = !isForecast || isFirstForecast;
-
-    const isLastHistory  = !isForecast && (index === data.length - 1 || data[index + 1]?.isForecast);
-    const showInForecast = isForecast  || isLastHistory;
-
-    let displayDate = "";
-    if (d.date) {
-      try {
-        const parts = d.date.split("-");
-        if (parts.length === 3) displayDate = `${parts[2]}/${parts[1]}`;
-        else displayDate = d.date;
-      } catch { displayDate = d.date; }
-    }
-
-    return {
-      ...d,
-      dateLabel:     displayDate,
-      historyValue:  showInHistory  ? val : null,
-      forecastValue: showInForecast ? val : null,
-    };
+export function LSTMForecast({
+  data = [],
+  loading = false,
+}: LSTMForecastProps) {
+  const [visibleMetrics, setVisibleMetrics] = useState({
+    views: true,
+    likes: true,
+    comments: true,
+    shares: true,
   });
 
-  const activeDef = METRIC_DEFS[selectedMetric];
-
-  const historyPoints  = data.filter((d) => !d.isForecast);
-  const forecastPoints = data.filter((d) =>  d.isForecast);
-
-  const getAvg = (points: ForecastDataPoint[], key: string) => {
-    if (points.length === 0) return 0;
-    const sum = points.reduce(
-      (acc, p) => acc + ((p[key as keyof ForecastDataPoint] as number) || 0),
-      0
-    );
-    return Math.round(sum / points.length);
+  const toggleMetric = (key: keyof typeof visibleMetrics) => {
+    setVisibleMetrics((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
   };
 
-  const valKey      = activeDef.valKey;
-  const avgHistory  = getAvg(historyPoints,  valKey);
-  const avgForecast = getAvg(forecastPoints, valKey);
-  const pctChange   = avgHistory > 0 ? ((avgForecast - avgHistory) / avgHistory) * 100 : 0;
+  // Build clean 7-day forecast dataset
+  const chartData = useMemo(() => {
+    if (!data || data.length === 0) return [];
 
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return "-";
-    try {
-      const parts = dateStr.split("-");
-      if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
-    } catch {}
-    return dateStr;
-  };
+    return data.map((d, idx) => {
+      let dateLabel = d.date;
+      if (d.date) {
+        try {
+          const parts = d.date.split("-");
+          if (parts.length === 3) dateLabel = `${parts[2]}/${parts[1]}`;
+        } catch {}
+      } else {
+        dateLabel = `Hari +${idx + 1}`;
+      }
 
-  const historyRange  = historyPoints.length > 0
-    ? `${formatDate(historyPoints[0].date)} s/d ${formatDate(historyPoints[historyPoints.length - 1].date)}`
-    : "-";
-  const forecastRange = forecastPoints.length > 0
-    ? `${formatDate(forecastPoints[0].date)} s/d ${formatDate(forecastPoints[forecastPoints.length - 1].date)}`
-    : "-";
+      return {
+        dateLabel,
+        rawDate: d.date,
+        views: d.predictedViews || 0,
+        likes: d.predictedLikes || 0,
+        comments: d.predictedComments || 0,
+        shares: d.predictedShares || 0,
+        isForecast: true,
+      };
+    });
+  }, [data]);
 
-  const hasHistory   = historyPoints.length > 0;
-  const hasForecast  = forecastPoints.length > 0;
-  const isLstmForecast  = hasForecast && historyPoints.length >= 7;
-  const isTrendForecast = hasForecast && historyPoints.length < 7;
-  const insufficientHistory = hasHistory && historyPoints.length < 3;
+  // Calculate averages across the forecast period
+  const summaryStats = useMemo(() => {
+    if (chartData.length === 0) return [];
+
+    const getAvg = (key: "views" | "likes" | "comments" | "shares") => {
+      const sum = chartData.reduce((acc, curr) => acc + (curr[key] || 0), 0);
+      return Math.round(sum / chartData.length);
+    };
+
+    return [
+      {
+        key: "views" as const,
+        label: "Views",
+        icon: Eye,
+        color: "#0ea5e9", // Dashboard Sky Blue
+        avg: getAvg("views"),
+        type: "Bar",
+      },
+      {
+        key: "likes" as const,
+        label: "Likes",
+        icon: Heart,
+        color: "#10b981", // Dashboard Emerald
+        avg: getAvg("likes"),
+        type: "Line",
+      },
+      {
+        key: "comments" as const,
+        label: "Comments",
+        icon: MessageCircle,
+        color: "#f59e0b", // Dashboard Amber
+        avg: getAvg("comments"),
+        type: "Line",
+      },
+      {
+        key: "shares" as const,
+        label: "Shares",
+        icon: Share2,
+        color: "#8b5cf6", // Dashboard Violet
+        avg: getAvg("shares"),
+        type: "Line",
+      },
+    ];
+  }, [chartData]);
 
   return (
-    <div
-      className="relative rounded-2xl overflow-hidden"
-      style={{
-        background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)",
-        border: "1px solid rgba(139,92,246,0.2)",
-        boxShadow: "0 8px 40px rgba(139,92,246,0.1)",
-      }}
-    >
-      <GridBg theme="dark" />
-
-      <div className="relative z-10 p-6">
+    <div className="rounded-2xl bg-white dark:bg-neutral-900 border border-stone-200/80 dark:border-neutral-800 shadow-sm p-5 overflow-hidden flex flex-col justify-between">
+      <div>
         {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
+        <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                 style={{ background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.3)" }}>
-              <Brain className="w-5 h-5 text-violet-400" />
+            <div className="w-8 h-8 rounded-lg bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 flex items-center justify-center flex-shrink-0 shadow-sm">
+              <Activity className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="font-black text-base text-white tracking-tight flex items-center gap-2">
-                LSTM Engagement Forecasting
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wide border"
-                      style={{ background: "rgba(139,92,246,0.2)", color: "#c4b5fd", borderColor: "rgba(139,92,246,0.4)" }}>
-                  PyTorch LSTM
-                </span>
-              </h2>
-              <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
-                Time-series forecasting · 14 hari histori → 7 hari prediksi
+              <h3 className="text-sm font-black text-stone-900 dark:text-white uppercase tracking-tight">
+                Proyeksi Metrik Konten (7 Hari)
+              </h3>
+              <p className="text-[11px] text-stone-500 dark:text-neutral-400">
+                Visualisasi terpadu Volume Views (Bar) & Interaksi (Line)
               </p>
-              {data.length > 0 && (
-                <div className="flex flex-col sm:flex-row sm:items-center gap-x-3 gap-y-0.5 mt-1 text-[10px] text-white/50">
-                  <span><strong className="text-emerald-400">Histori Aktual:</strong> {historyRange}</span>
-                  <span className="hidden sm:inline" style={{ color: "rgba(255,255,255,0.2)" }}>|</span>
-                  <span><strong className="text-violet-400">Prediksi LSTM:</strong> {forecastRange}</span>
+            </div>
+          </div>
+
+          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-stone-100 dark:bg-neutral-800 text-stone-600 dark:text-neutral-300 border border-stone-200/60 dark:border-neutral-700 text-[10px] font-bold">
+            <Sparkles className="w-3 h-3 text-sky-500" />
+            <span>Kombinasi Bar + Line</span>
+          </div>
+        </div>
+
+        {/* 4-Metric Compact Stat Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+          {summaryStats.map((item) => {
+            const Icon = item.icon;
+            const isVisible = visibleMetrics[item.key];
+
+            return (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => toggleMetric(item.key)}
+                className={`p-2.5 rounded-xl border text-left transition-all ${
+                  isVisible
+                    ? "bg-stone-50/70 dark:bg-neutral-800/50 border-stone-200/80 dark:border-neutral-700/80 hover:bg-stone-100/70"
+                    : "bg-white dark:bg-neutral-900 border-stone-200/40 dark:border-neutral-800 opacity-50"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-1 mb-1">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span
+                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      style={{ background: item.color }}
+                    />
+                    <span className="text-[10px] font-bold text-stone-500 dark:text-neutral-400 uppercase tracking-wider truncate">
+                      {item.label}
+                    </span>
+                  </div>
+                  <Icon className="w-3 h-3 text-stone-400 flex-shrink-0" />
                 </div>
-              )}
-            </div>
-          </div>
 
-          {/* Metric Selector */}
-          <div className="flex flex-wrap gap-1.5">
-            {(Object.entries(METRIC_DEFS) as [MetricKey, typeof METRIC_DEFS[MetricKey]][]).map(([key, m]) => {
-              const isSelected = selectedMetric === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setSelectedMetric(key)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black transition-all"
-                  style={{
-                    background:  isSelected ? m.color : "rgba(255,255,255,0.06)",
-                    color:       isSelected ? "#fff"  : "rgba(255,255,255,0.5)",
-                    border:      `1px solid ${isSelected ? m.color : "rgba(255,255,255,0.08)"}`,
-                    boxShadow:   isSelected ? `0 0 10px ${m.color}44` : "none",
-                  }}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full"
-                        style={{ background: isSelected ? "#fff" : m.color }} />
-                  {m.label}
-                </button>
-              );
-            })}
-          </div>
+                <div className="flex items-baseline justify-between gap-1">
+                  <span className="text-sm font-bold font-mono text-stone-900 dark:text-white">
+                    {formatNum(item.avg)}
+                  </span>
+                  <span className="text-[9px] font-bold text-stone-400 font-mono">
+                    / hari
+                  </span>
+                </div>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Description */}
-        <div
-          className="mb-6 p-4 rounded-xl text-xs space-y-2 text-white/70"
-          style={{ background: "rgba(139,92,246,0.05)", border: "1px solid rgba(139,92,246,0.15)" }}
-        >
-          <p className="leading-relaxed">
-            <strong className="text-violet-400">Cara Kerja Model:</strong> Model{" "}
-            <strong className="text-white">LSTM (Long Short-Term Memory)</strong> berbasis PyTorch dilatih menggunakan
-            data time-series engagement harian (views, likes, comments, shares) dari semua akun yang dipantau.
-            Model menerima sequence 14 hari sebagai input dan memprediksi 7 hari ke depan secara simultan.
-          </p>
-          <p className="leading-relaxed">
-            <strong className="text-emerald-400">Interpretasi Chart:</strong>{" "}
-            Garis <span className="text-emerald-400 font-bold">solid</span> = data aktual historis.{" "}
-            Garis <span className="text-violet-400 font-bold">putus-putus</span> = prediksi LSTM model PyTorch.
-          </p>
-        </div>
-
+        {/* Loading / Empty States */}
         {loading ? (
-          <div className="h-[280px] flex items-center justify-center text-white/50 text-xs font-bold">
-            <span className="animate-pulse">Memuat prediksi LSTM model...</span>
+          <div className="h-64 flex items-center justify-center text-stone-400 text-xs font-medium">
+            Memuat proyeksi metrik...
           </div>
-        ) : data.length === 0 ? (
-          <div className="h-[280px] flex flex-col items-center justify-center gap-3 text-center px-8">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-1"
-                 style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <Brain className="w-6 h-6" style={{ color: "rgba(255,255,255,0.25)" }} />
-            </div>
-            <p className="text-sm font-black" style={{ color: "rgba(255,255,255,0.5)" }}>
-              Belum ada data prediksi LSTM
+        ) : chartData.length === 0 ? (
+          <div className="h-48 flex flex-col items-center justify-center gap-2 text-center px-6 rounded-xl bg-stone-50/50 dark:bg-neutral-800/30 border border-dashed border-stone-200 dark:border-neutral-800">
+            <Layers className="w-5 h-5 text-stone-400" />
+            <p className="text-xs font-bold text-stone-700 dark:text-neutral-300">
+              Data proyeksi metrik belum tersedia
             </p>
-            <p className="text-xs leading-relaxed max-w-sm" style={{ color: "rgba(255,255,255,0.3)" }}>
-              Tabel <code className="px-1 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.08)" }}>ml_engagement_forecasts</code> masih kosong.
-              Jalankan DAG 3 (ML Inference) di Airflow, atau trigger inference melalui menu ML Predictions.
+            <p className="text-[11px] text-stone-400 max-w-sm">
+              Data akan tampil secara otomatis setelah histori performa terdata.
             </p>
           </div>
         ) : (
-          <>
-            {/* Data quality banners */}
-            {insufficientHistory && (
-              <div className="mb-4 px-4 py-3 rounded-xl flex items-start gap-3 text-xs"
-                   style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)" }}>
-                <span className="text-amber-400 font-black flex-shrink-0 mt-0.5">⚠</span>
-                <p style={{ color: "rgba(255,255,255,0.6)" }}>
-                  <strong className="text-amber-400">Data histori terbatas</strong> — hanya {historyPoints.length} hari tersedia.
-                  LSTM optimal dengan minimal 14 hari data snapshot. Jalankan DAG 2 secara rutin.
-                </p>
-              </div>
-            )}
-            {isTrendForecast && (
-              <div className="mb-4 px-4 py-3 rounded-xl flex items-start gap-3 text-xs"
-                   style={{ background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.2)" }}>
-                <span className="text-violet-400 font-black flex-shrink-0 mt-0.5">ℹ</span>
-                <p style={{ color: "rgba(255,255,255,0.55)" }}>
-                  <strong className="text-violet-400">Linear trend (fallback)</strong> — tabel{" "}
-                  <code className="px-1 py-0.5 rounded text-violet-300"
-                        style={{ background: "rgba(139,92,246,0.15)" }}>ml_engagement_forecasts</code>{" "}
-                  kosong. Garis putus-putus adalah ekstrapolasi linier sementara.
-                  Jalankan DAG 3 untuk prediksi LSTM nyata.
-                </p>
-              </div>
-            )}
-            {isLstmForecast && (
-              <div className="mb-4 px-4 py-3 rounded-xl flex items-start gap-3 text-xs"
-                   style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.15)" }}>
-                <span className="text-emerald-400 font-black flex-shrink-0 mt-0.5">✓</span>
-                <p style={{ color: "rgba(255,255,255,0.55)" }}>
-                  <strong className="text-emerald-400">LSTM aktif</strong> — model PyTorch telah memproses{" "}
-                  {historyPoints.length} hari histori dan menghasilkan proyeksi 7 hari ke depan.
-                </p>
-              </div>
-            )}
-
-            {/* Chart */}
-            <div className="relative h-[280px]">
+          <div>
+            {/* Unified Bar + Line Composed Chart */}
+            <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={chartData} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="lstmHistoryGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor={activeDef.color} stopOpacity={0.25} />
-                      <stop offset="95%" stopColor={activeDef.color} stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="lstmForecastGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#8b5cf6" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-
-                  <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+                <ComposedChart
+                  data={chartData}
+                  margin={{ top: 12, right: 12, left: -16, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="#f5f5f4"
+                    vertical={false}
+                  />
                   <XAxis
                     dataKey="dateLabel"
-                    stroke="rgba(255,255,255,0.3)"
-                    axisLine={false}
+                    tick={{ fontSize: 10, fill: "#78716c", fontWeight: 700 }}
+                    axisLine={{ stroke: "#e7e5e4" }}
                     tickLine={false}
-                    tick={{ fontSize: 10, fontWeight: 700, fill: "rgba(255,255,255,0.45)" }}
                   />
+                  {/* Left Y-Axis for Views (Bar) */}
                   <YAxis
-                    stroke="rgba(255,255,255,0.3)"
+                    yAxisId="views"
+                    orientation="left"
+                    tick={{ fontSize: 10, fill: "#0ea5e9", fontWeight: 600 }}
                     axisLine={false}
                     tickLine={false}
                     tickFormatter={formatNum}
-                    tick={{ fontSize: 10, fontWeight: 700, fill: "rgba(255,255,255,0.4)" }}
+                  />
+                  {/* Right Y-Axis for Engagements (Likes, Comments, Shares) */}
+                  <YAxis
+                    yAxisId="engagements"
+                    orientation="right"
+                    tick={{ fontSize: 10, fill: "#10b981", fontWeight: 600 }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={formatNum}
                   />
                   <Tooltip
-                    cursor={{ stroke: "rgba(255,255,255,0.15)", strokeWidth: 1, strokeDasharray: "3 3" }}
-                    contentStyle={{
-                      background: "#0f172a",
-                      border: "1px solid rgba(139,92,246,0.3)",
-                      borderRadius: 12,
-                      boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
-                      fontFamily: "'DM Sans', sans-serif",
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: "#fff",
-                    }}
-                    formatter={(value: any, name: string) => {
-                      const label = name === "historyValue" ? "Aktual/Histori" : "Prediksi LSTM";
-                      return [formatNum(Number(value)), label];
+                    cursor={{ fill: "rgba(14, 165, 233, 0.05)" }}
+                    content={({ active, payload, label }) => {
+                      if (!active || !payload || !payload.length) return null;
+                      const dataPoint = payload[0]?.payload;
+
+                      return (
+                        <div className="bg-white dark:bg-neutral-900 border border-stone-200 dark:border-neutral-700 rounded-xl p-3 shadow-lg text-xs space-y-2 min-w-[170px]">
+                          <div className="flex items-center justify-between pb-1.5 border-b border-stone-100 dark:border-neutral-800">
+                            <span className="font-bold text-stone-900 dark:text-white">
+                              {label}
+                            </span>
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-50 text-sky-600 border border-sky-200/60 dark:bg-sky-950/40 dark:text-sky-400">
+                              Proyeksi 7H
+                            </span>
+                          </div>
+
+                          <div className="space-y-1 font-mono">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sky-600 font-bold flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-xs bg-sky-500" />
+                                Views:
+                              </span>
+                              <span className="font-bold text-stone-900 dark:text-white">
+                                {formatNum(dataPoint.views)}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-emerald-600 font-bold flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                                Likes:
+                              </span>
+                              <span className="font-bold text-stone-900 dark:text-white">
+                                {formatNum(dataPoint.likes)}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-amber-600 font-bold flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-xs bg-amber-500" />
+                                Comments:
+                              </span>
+                              <span className="font-bold text-stone-900 dark:text-white">
+                                {formatNum(dataPoint.comments)}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-purple-600 font-bold flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-xs bg-purple-500" />
+                                Shares:
+                              </span>
+                              <span className="font-bold text-stone-900 dark:text-white">
+                                {formatNum(dataPoint.shares)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
                     }}
                   />
 
-                  <Area type="monotone" dataKey="historyValue"  stroke="none" fill="url(#lstmHistoryGrad)"  connectNulls />
-                  <Area type="monotone" dataKey="forecastValue" stroke="none" fill="url(#lstmForecastGrad)" connectNulls />
+                  {/* Views Bar (Dashboard Sky Blue #0ea5e9) */}
+                  {visibleMetrics.views && (
+                    <Bar
+                      yAxisId="views"
+                      dataKey="views"
+                      name="Views"
+                      fill="#0ea5e9"
+                      radius={[6, 6, 0, 0]}
+                      maxBarSize={36}
+                      className="cursor-pointer transition-opacity hover:opacity-85"
+                    />
+                  )}
 
-                  <Line
-                    type="monotone"
-                    dataKey="historyValue"
-                    stroke={activeDef.color}
-                    strokeWidth={3}
-                    dot={{ r: 2, fill: activeDef.color, stroke: "#0f172a", strokeWidth: 1 }}
-                    activeDot={{ r: 5, fill: activeDef.color, stroke: "#fff", strokeWidth: 2 }}
-                    connectNulls
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="forecastValue"
-                    stroke="#8b5cf6"
-                    strokeWidth={3}
-                    strokeDasharray="5 5"
-                    dot={{ r: 2, fill: "#8b5cf6", stroke: "#0f172a", strokeWidth: 1 }}
-                    activeDot={{ r: 5, fill: "#8b5cf6", stroke: "#fff", strokeWidth: 2 }}
-                    connectNulls
-                  />
+                  {/* Likes Line */}
+                  {visibleMetrics.likes && (
+                    <Line
+                      yAxisId="engagements"
+                      type="monotone"
+                      dataKey="likes"
+                      name="Likes"
+                      stroke="#10b981"
+                      strokeWidth={2.5}
+                      dot={{ r: 3, fill: "#10b981", stroke: "#ffffff", strokeWidth: 2 }}
+                      activeDot={{ r: 5, fill: "#10b981", stroke: "#ffffff", strokeWidth: 2 }}
+                    />
+                  )}
+
+                  {/* Comments Line */}
+                  {visibleMetrics.comments && (
+                    <Line
+                      yAxisId="engagements"
+                      type="monotone"
+                      dataKey="comments"
+                      name="Comments"
+                      stroke="#f59e0b"
+                      strokeWidth={2.5}
+                      dot={{ r: 3, fill: "#f59e0b", stroke: "#ffffff", strokeWidth: 2 }}
+                      activeDot={{ r: 5, fill: "#f59e0b", stroke: "#ffffff", strokeWidth: 2 }}
+                    />
+                  )}
+
+                  {/* Shares Line */}
+                  {visibleMetrics.shares && (
+                    <Line
+                      yAxisId="engagements"
+                      type="monotone"
+                      dataKey="shares"
+                      name="Shares"
+                      stroke="#8b5cf6"
+                      strokeWidth={2.5}
+                      dot={{ r: 3, fill: "#8b5cf6", stroke: "#ffffff", strokeWidth: 2 }}
+                      activeDot={{ r: 5, fill: "#8b5cf6", stroke: "#ffffff", strokeWidth: 2 }}
+                    />
+                  )}
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
 
-            {/* Stats */}
-            <div
-              className="mt-6 pt-5 grid grid-cols-1 sm:grid-cols-3 gap-4"
-              style={{ borderTop: "1px solid rgba(139,92,246,0.15)" }}
-            >
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">
-                  Rata-rata Histori
-                </p>
-                <h4 className="text-lg font-black text-white mt-1 tracking-tight">{formatNum(avgHistory)}</h4>
-                <p className="text-[10px] text-white/50">Periode aktual historis</p>
+            {/* Bottom Legend */}
+            <div className="flex flex-wrap items-center justify-between text-[10px] text-stone-400 mt-2 pt-2 border-t border-stone-100 dark:border-neutral-800">
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1 font-semibold text-sky-600 dark:text-sky-400">
+                  <span className="w-2.5 h-2.5 rounded-xs bg-sky-500 inline-block" />
+                  Views (Bar)
+                </span>
               </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-violet-400">
-                  Proyeksi 7 Hari Ke Depan
-                </p>
-                <h4 className="text-lg font-black text-violet-400 mt-1 tracking-tight">{formatNum(avgForecast)}</h4>
-                <p className="text-[10px] text-violet-300/40">Prediksi model LSTM PyTorch</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">
-                  Tren Perubahan
-                </p>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <span className={`text-sm font-black flex items-center ${pctChange >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                    {pctChange >= 0 ? "+" : ""}{pctChange.toFixed(1)}%
-                  </span>
-                  <ArrowRight className="w-3.5 h-3.5 text-white/40" />
-                </div>
-                <p className="text-[10px] text-white/50">Proyeksi vs histori</p>
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1 font-semibold text-emerald-600">
+                  <span className="w-2 h-0.5 bg-emerald-500 inline-block" /> Likes
+                </span>
+                <span className="flex items-center gap-1 font-semibold text-amber-600">
+                  <span className="w-2 h-0.5 bg-amber-500 inline-block" /> Comments
+                </span>
+                <span className="flex items-center gap-1 font-semibold text-purple-600">
+                  <span className="w-2 h-0.5 bg-purple-500 inline-block" /> Shares
+                </span>
               </div>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>

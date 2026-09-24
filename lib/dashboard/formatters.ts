@@ -1,7 +1,8 @@
 import type { CategoryId } from "./types";
 
-/** Compact number formatter (e.g. 1.2M / 12K / 1,234). */
+/** Compact number formatter (e.g. 1.2B / 1.2M / 12K / 1,234). */
 export function fmt(n: number): string {
+  if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1) + "B";
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
   if (n >= 1_000)
     return (n / 1_000).toFixed(n >= 100_000 ? 0 : 1) + "K";

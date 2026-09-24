@@ -1,40 +1,44 @@
+"use client";
+
 import * as React from "react";
+import { CheckCircle2, AlertCircle, Info } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type AuthAlertProps = {
-  variant: "error" | "success" | "info";
+  variant?: "error" | "success" | "info";
   children: React.ReactNode;
+  className?: string;
 };
 
-const STYLES: Record<
-  AuthAlertProps["variant"],
-  { background: string; border: string; color: string }
-> = {
-  error: {
-    background: "rgba(239, 68, 68, 0.08)",
-    border: "1px solid rgba(239, 68, 68, 0.18)",
-    color: "#b91c1c",
-  },
-  success: {
-    background: "rgba(34, 197, 94, 0.08)",
-    border: "1px solid rgba(34, 197, 94, 0.18)",
-    color: "#15803d",
-  },
-  info: {
-    background: "rgba(59, 130, 246, 0.08)",
-    border: "1px solid rgba(59, 130, 246, 0.18)",
-    color: "#1d4ed8",
-  },
-};
+export function AuthAlert({
+  variant = "error",
+  children,
+  className,
+}: AuthAlertProps) {
+  const isError = variant === "error";
+  const isSuccess = variant === "success";
 
-/** Small inline alert used in auth forms for server errors / status. */
-export function AuthAlert({ variant, children }: AuthAlertProps) {
+  const Icon = isError ? AlertCircle : isSuccess ? CheckCircle2 : Info;
+
   return (
     <div
-      role={variant === "error" ? "alert" : "status"}
-      className="rounded-xl px-4 py-3 text-sm font-semibold"
-      style={STYLES[variant]}
+      className={cn(
+        "p-3 sm:p-3.5 rounded-xl border text-xs leading-relaxed flex items-start gap-2.5",
+        isError
+          ? "bg-red-50/80 border-red-200 text-red-800"
+          : isSuccess
+          ? "bg-emerald-50/80 border-emerald-200 text-emerald-800"
+          : "bg-blue-50/80 border-blue-200 text-blue-800",
+        className
+      )}
     >
-      {children}
+      <Icon
+        className={cn(
+          "w-4 h-4 shrink-0 mt-0.5",
+          isError ? "text-red-600" : isSuccess ? "text-emerald-600" : "text-blue-600"
+        )}
+      />
+      <div className="flex-1 font-medium">{children}</div>
     </div>
   );
 }

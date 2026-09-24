@@ -1,7 +1,13 @@
-import { Activity, Eye, Flame, TrendingUp, Video } from "lucide-react";
+"use client";
 
-import { GridBg } from "@/components/layout/GridBg";
-import { TOKENS } from "@/lib/design-tokens";
+import type { ElementType } from "react";
+import {
+  Activity,
+  Eye,
+  Flame,
+  Video,
+} from "lucide-react";
+
 import { formatNum, formatPct } from "@/lib/analytics/formatters";
 import type { HistoricalDay } from "@/lib/analytics/types";
 
@@ -9,115 +15,98 @@ type KpiRowProps = {
   data: HistoricalDay[];
 };
 
+type InfoCard = {
+  Ico: ElementType;
+  label: string;
+  value: string;
+  sub: string;
+  tag: string;
+  accent: string;
+};
+
 /**
- * Four headline KPI tiles summarising the historical period: total videos
- * processed, total views, average engagement %, and average viral prob.
- * The delta values are placeholders until backend wiring lands.
+ * KPI summary cards matching the exact layout and formatting of BasicInformation on Dashboard.
  */
 export function KpiRow({ data }: KpiRowProps) {
   const totalViews = data.reduce((s, d) => s + d.views, 0);
   const totalVideos = data.reduce((s, d) => s + d.videos, 0);
   const avgEng = (
-    data.reduce((s, d) => s + d.engagement, 0) / data.length
+    data.reduce((s, d) => s + d.engagement, 0) / (data.length || 1)
   ).toFixed(1);
-  const avgViral = data.reduce((s, d) => s + d.viralProb, 0) / data.length;
+  const avgViral = data.reduce((s, d) => s + d.viralProb, 0) / (data.length || 1);
 
-  const items = [
-    {
-      Ico: Video,
-      label: "Videos Diproses",
-      value: totalVideos.toString(),
-      sub: `Selama ${data.length} hari periode`,
-      delta: "+18",
-      pos: true,
-    },
+  const cards: InfoCard[] = [
     {
       Ico: Eye,
       label: "Total Views",
       value: formatNum(totalViews),
-      sub: "Akumulasi semua akun",
-      delta: "+22%",
-      pos: true,
+      sub: "Akumulasi cross-account",
+      tag: "+22% Reach",
+      accent: "text-stone-800 dark:text-stone-200 bg-stone-100 dark:bg-neutral-800 border-stone-200/80 dark:border-neutral-700",
+    },
+    {
+      Ico: Video,
+      label: "Total Videos",
+      value: totalVideos.toString(),
+      sub: `Selama ${data.length} hari periode`,
+      tag: `${totalVideos} Active`,
+      accent: "text-stone-800 dark:text-stone-200 bg-stone-100 dark:bg-neutral-800 border-stone-200/80 dark:border-neutral-700",
     },
     {
       Ico: Activity,
       label: "Avg. Engagement",
       value: `${avgEng}%`,
-      sub: "Rata-rata harian",
-      delta: "+0.8%",
-      pos: true,
+      sub: "Rata-rata harian tertimbang",
+      tag: "+0.8% Baseline",
+      accent: "text-stone-800 dark:text-stone-200 bg-stone-100 dark:bg-neutral-800 border-stone-200/80 dark:border-neutral-700",
     },
     {
       Ico: Flame,
-      label: "Avg. Viral Prob.",
+      label: "Avg. Viral Score",
       value: formatPct(avgViral),
-      sub: "Model RF-viral-v2.4.1",
-      delta: "+5.4%",
-      pos: true,
+      sub: "Model RF-viral-v2.4",
+      tag: "+5.4% Velocity",
+      accent: "text-stone-800 dark:text-stone-200 bg-stone-100 dark:bg-neutral-800 border-stone-200/80 dark:border-neutral-700",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {items.map((c) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      {cards.map((c) => (
         <div
           key={c.label}
-          className="relative p-5 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5"
-          style={{
-            background: TOKENS.cardSoft,
-            backdropFilter: "blur(16px)",
-            border: `1px solid ${TOKENS.cardBorder}`,
-            boxShadow:
-              "0 2px 16px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,1)",
-          }}
+          className="group relative p-4 rounded-xl bg-white dark:bg-neutral-900 border border-stone-200/80 dark:border-neutral-800 shadow-xs hover:border-stone-400 dark:hover:border-neutral-700 hover:shadow-sm transition-all flex flex-col justify-between"
         >
-          <GridBg theme="light" />
-          <div className="relative z-10">
-            <div className="flex items-start justify-between mb-4">
+          <div>
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <span className="text-[10.5px] font-bold text-stone-500 dark:text-neutral-400 uppercase tracking-wider">
+                {c.label}
+              </span>
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{
-                  background: "#111",
-                  boxShadow: "0 4px 14px rgba(0,0,0,0.18)",
-                }}
+                className={`w-7 h-7 rounded-lg border flex items-center justify-center flex-shrink-0 ${c.accent}`}
               >
-                <c.Ico
-                  className="w-4 h-4 text-white"
-                  strokeWidth={2}
-                />
-              </div>
-              <div
-                className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-black"
-                style={{
-                  background: c.pos
-                    ? "rgba(5,150,105,0.08)"
-                    : "rgba(220,38,38,0.07)",
-                  color: c.pos ? "#059669" : "#dc2626",
-                  border: `1px solid ${c.pos ? "rgba(5,150,105,0.18)" : "rgba(220,38,38,0.18)"}`,
-                }}
-              >
-                <TrendingUp className="w-3 h-3" strokeWidth={2.5} />
-                {c.delta}
+                <c.Ico className="w-3.5 h-3.5" strokeWidth={2.2} />
               </div>
             </div>
-            <p
-              className="text-[10.5px] font-bold uppercase tracking-[0.14em] mb-1.5"
-              style={{ color: TOKENS.textMuted }}
-            >
-              {c.label}
-            </p>
-            <p
-              className="text-3xl font-black mb-1 leading-none tracking-tight"
-              style={{ color: TOKENS.text }}
-            >
+
+            <p className="text-2xl font-bold font-mono text-stone-900 dark:text-white tracking-tight leading-none mb-2">
               {c.value}
             </p>
-            <p className="text-xs" style={{ color: TOKENS.textMuted }}>
+          </div>
+
+          <div className="pt-2 border-t border-stone-100 dark:border-neutral-800 flex items-center justify-between gap-2">
+            <span className="text-[10px] text-stone-500 dark:text-neutral-400 truncate">
               {c.sub}
-            </p>
+            </span>
+            <span className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-stone-100 dark:bg-neutral-800 text-stone-600 dark:text-neutral-300 flex-shrink-0 font-mono">
+              {c.tag}
+            </span>
           </div>
         </div>
       ))}
     </div>
   );
 }
+
+
+

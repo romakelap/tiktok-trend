@@ -88,19 +88,19 @@ export function AppSidebar({
       </SidebarContent>
       <SidebarFooter className="gap-3">
         {lastSync && (
-          <div className="px-3 py-2 mx-2 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.05] dark:border-white/[0.05] flex items-center gap-2.5">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <div className="flex flex-col leading-none">
-              <span className="text-[9px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider mb-0.5">
+          <div className="px-3 py-2 mx-2 rounded-lg bg-neutral-50 dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                 Sync Terakhir
               </span>
-              <span className="text-[11px] font-semibold text-neutral-600 dark:text-neutral-300">
-                {lastSync}
-              </span>
             </div>
+            <span className="text-xs font-mono font-medium text-neutral-700 dark:text-neutral-300">
+              {lastSync}
+            </span>
           </div>
         )}
         <NavUser />
