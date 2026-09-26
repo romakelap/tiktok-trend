@@ -20,7 +20,6 @@ import {
 } from "@/components/auth";
 import { LoginPreview } from "@/components/auth/LoginPreview";
 import { loginUser } from "@/lib/auth-api";
-import { saveAuthSession } from "@/lib/auth";
 import { ROUTES } from "@/lib/routes";
 import { loginSchema, type LoginFormValues } from "@/lib/schemas/auth";
 
@@ -53,11 +52,19 @@ function LoginForm() {
   const onSubmit = async (values: LoginFormValues) => {
     setServerError(null);
     try {
-      await loginUser({
+      const res = await loginUser({
         email: values.email.trim().toLowerCase(),
         password: values.password,
       });
-      router.push(redirectTo);
+
+      const userRole = res?.data?.role?.toUpperCase();
+      if (userRole === "ADMIN") {
+        toast.success("Login berhasil! Mengalihkan ke Admin Console...");
+        router.push(ROUTES.adminDashboard);
+      } else {
+        toast.success("Login berhasil!");
+        router.push(redirectTo);
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Login gagal dilakukan.";
       setServerError(message);
@@ -150,34 +157,6 @@ function LoginForm() {
             <AuthSubmitButton loading={isSubmitting}>
               Masuk ke Dashboard
             </AuthSubmitButton>
-          </div>
-
-          <div className="pt-3">
-            <button
-              type="button"
-              onClick={() => {
-                saveAuthSession({
-                  accessToken: "admin_master_session_token_" + Date.now(),
-                  refreshToken: "admin_master_refresh_token_" + Date.now(),
-                  user: {
-                    id: 1,
-                    fullName: "Nico Revaldo (Super Admin)",
-                    email: "admin@cube.asia",
-                    role: "ADMIN",
-                    status: "active",
-                  },
-                });
-                toast.success("Berhasil masuk sebagai Administrator!");
-                router.push(ROUTES.adminDashboard);
-              }}
-              className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl border border-indigo-200 dark:border-indigo-900/60 bg-gradient-to-r from-indigo-50/80 via-white to-indigo-50/80 dark:from-indigo-950/40 dark:via-neutral-900 dark:to-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:from-indigo-100 hover:to-indigo-100 text-xs font-bold transition-all shadow-xs group"
-            >
-              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-              <span>Masuk Cepat sebagai Super Admin (1-Click)</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 uppercase font-black tracking-wider">
-                ADMIN
-              </span>
-            </button>
           </div>
         </form>
 
