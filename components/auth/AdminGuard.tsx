@@ -29,26 +29,29 @@ export default function AdminGuard({ children }: AdminGuardProps) {
     const storedUser = getStoredUser();
     const isRoleAdmin = storedUser?.role?.toUpperCase() === "ADMIN";
 
-    // Double check with /api/users/me if needed
+    if (isRoleAdmin) {
+      setAuthorized(true);
+      setChecking(false);
+      return;
+    }
+
+    // If role in storage is not ADMIN, verify with server without auto-redirecting on 401
     async function verifyAdmin() {
       try {
-        const res = await apiFetch<any>(API_ENDPOINTS.users.me);
-        const serverRole = res?.data?.role || res?.data?.user?.role || storedUser?.role;
+        const res = await apiFetch<any>(API_ENDPOINTS.users.me, {
+          redirectOnUnauthorized: false,
+        });
+        const serverRole = res?.data?.role || res?.data?.user?.role;
         
-        if (serverRole?.toUpperCase() === "ADMIN" || isRoleAdmin) {
+        if (serverRole?.toUpperCase() === "ADMIN") {
           setAuthorized(true);
         } else {
           toast.error("Access Denied: Admin role required.");
           router.replace(ROUTES.dashboard);
         }
       } catch (err) {
-        // If server is unreachable or fails, check storedUser
-        if (isRoleAdmin) {
-          setAuthorized(true);
-        } else {
-          toast.error("Access Denied: You do not have admin permissions.");
-          router.replace(ROUTES.dashboard);
-        }
+        toast.error("Access Denied: You do not have admin permissions.");
+        router.replace(ROUTES.dashboard);
       } finally {
         setChecking(false);
       }
