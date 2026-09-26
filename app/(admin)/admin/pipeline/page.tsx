@@ -68,9 +68,15 @@ export default function AdminPipelinePage() {
                 Collects raw TikTok data (Video Library, Trending Hashtags, & Selling Videos).
               </p>
             </div>
-            <div className="text-xs text-neutral-600 dark:text-neutral-400 space-y-1 bg-neutral-50 dark:bg-neutral-800/50 p-3 rounded-xl">
-              <div>⏰ Schedule: <strong>Setiap 12 Jam (08:25 & 20:25 WIB)</strong></div>
-              <div>⚡ Auto-chain: <strong>Triggers DAG 2 on success</strong></div>
+            <div className="text-xs text-neutral-600 dark:text-neutral-400 space-y-1.5 bg-neutral-50 dark:bg-neutral-800/50 p-3 rounded-xl">
+              <div className="flex items-center gap-1.5">
+                <IconClock className="size-3.5 text-neutral-400 shrink-0" />
+                <span>Schedule: <strong>Setiap 12 Jam (08:25 & 20:25 WIB)</strong></span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <IconLayersLinked className="size-3.5 text-emerald-500 shrink-0" />
+                <span>Auto-chain: <strong>Triggers DAG 2 on success</strong></span>
+              </div>
             </div>
           </div>
           <button
@@ -100,9 +106,15 @@ export default function AdminPipelinePage() {
                 Reads Excel datasets, validates staging, upserts to MySQL, and refreshes BI tables.
               </p>
             </div>
-            <div className="text-xs text-neutral-600 dark:text-neutral-400 space-y-1 bg-neutral-50 dark:bg-neutral-800/50 p-3 rounded-xl">
-              <div>⏰ Trigger: <strong>Auto by DAG 1 completion</strong></div>
-              <div>⚡ Auto-chain: <strong>Triggers DAG 3 on success</strong></div>
+            <div className="text-xs text-neutral-600 dark:text-neutral-400 space-y-1.5 bg-neutral-50 dark:bg-neutral-800/50 p-3 rounded-xl">
+              <div className="flex items-center gap-1.5">
+                <IconClock className="size-3.5 text-neutral-400 shrink-0" />
+                <span>Trigger: <strong>Auto by DAG 1 completion</strong></span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <IconLayersLinked className="size-3.5 text-blue-500 shrink-0" />
+                <span>Auto-chain: <strong>Triggers DAG 3 on success</strong></span>
+              </div>
             </div>
           </div>
           <button
@@ -132,9 +144,15 @@ export default function AdminPipelinePage() {
                 Runs Random Forest Virality, SVM Tier classification, and PyTorch LSTM forecasting.
               </p>
             </div>
-            <div className="text-xs text-neutral-600 dark:text-neutral-400 space-y-1 bg-neutral-50 dark:bg-neutral-800/50 p-3 rounded-xl">
-              <div>⏰ Trigger: <strong>Auto by DAG 2 completion</strong></div>
-              <div>🤖 ML Endpoint: <strong>FastAPI Service (Port 8001)</strong></div>
+            <div className="text-xs text-neutral-600 dark:text-neutral-400 space-y-1.5 bg-neutral-50 dark:bg-neutral-800/50 p-3 rounded-xl">
+              <div className="flex items-center gap-1.5">
+                <IconClock className="size-3.5 text-neutral-400 shrink-0" />
+                <span>Trigger: <strong>Auto by DAG 2 completion</strong></span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <IconShieldLock className="size-3.5 text-purple-500 shrink-0" />
+                <span>ML Endpoint: <strong>FastAPI Service (Port 8001)</strong></span>
+              </div>
             </div>
           </div>
           <button
