@@ -329,11 +329,32 @@ export default function NLPInsights() {
 
       // Comparative NLP fetching if filter is 'all'
       if (accountFilter === 'all') {
-        const mainId = localStorage.getItem("analytics_main_influencer_id");
-        const compIdsRaw = localStorage.getItem("analytics_competitor_influencer_ids");
+        let mainId: string | null = typeof window !== 'undefined' ? localStorage.getItem("analytics_main_influencer_id") : null;
+        const compIdsRaw = typeof window !== 'undefined' ? localStorage.getItem("analytics_competitor_influencer_ids") : null;
         let compIds: string[] = [];
         if (compIdsRaw) {
           try { compIds = JSON.parse(compIdsRaw); } catch(e) {}
+        }
+
+        // Auto-initialize if not set in localStorage (e.g. direct visit on Vercel)
+        if (!mainId && accountsList.length > 0) {
+          const ownAcc = accountsList.find(a => a.type === 'own') || accountsList[0];
+          if (ownAcc?.influencerId) {
+            const fallbackId = String(ownAcc.influencerId);
+            mainId = fallbackId;
+            if (typeof window !== 'undefined') {
+              localStorage.setItem("analytics_main_influencer_id", fallbackId);
+              const defaultComps = accountsList
+                .filter(a => a.influencerId?.toString() !== fallbackId)
+                .slice(0, 3)
+                .map(a => a.influencerId?.toString())
+                .filter(Boolean) as string[];
+              compIds = defaultComps;
+              localStorage.setItem("analytics_competitor_influencer_ids", JSON.stringify(compIds));
+            }
+            setConfiguredMainId(fallbackId);
+            setConfiguredCompIds(compIds);
+          }
         }
 
         if (mainId) {
