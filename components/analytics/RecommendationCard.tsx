@@ -105,35 +105,37 @@ export function RecommendationCard({ rec, onOpen }: RecommendationCardProps) {
           </p>
         </div>
 
-        <div className="flex items-center gap-1 flex-wrap mb-3">
-          {rec.hashtags.slice(0, 3).map((tag) => (
-            <span
-              key={tag}
-              className="inline-flex items-center px-1.5 py-0.5 rounded-md font-bold"
-              style={{
-                background: "rgba(14,165,233,0.07)",
-                color: "#0369a1",
-                border: "1px solid rgba(14,165,233,0.18)",
-                fontSize: 10,
-              }}
-            >
-              {tag}
-            </span>
-          ))}
-          {rec.hashtags.length > 3 && (
-            <span
-              className="inline-flex items-center px-1.5 py-0.5 rounded-md font-bold"
-              style={{
-                background: "rgba(0,0,0,0.04)",
-                color: TOKENS.textMuted,
-                border: `1px solid ${TOKENS.divider}`,
-                fontSize: 10,
-              }}
-            >
-              +{rec.hashtags.length - 3}
-            </span>
-          )}
-        </div>
+        {rec.hashtags && rec.hashtags.length > 0 && (
+          <div className="flex items-center gap-1 flex-wrap mb-3">
+            {rec.hashtags.slice(0, 3).map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center px-1.5 py-0.5 rounded-md font-bold"
+                style={{
+                  background: "rgba(14,165,233,0.07)",
+                  color: "#0369a1",
+                  border: "1px solid rgba(14,165,233,0.18)",
+                  fontSize: 10,
+                }}
+              >
+                {tag}
+              </span>
+            ))}
+            {rec.hashtags.length > 3 && (
+              <span
+                className="inline-flex items-center px-1.5 py-0.5 rounded-md font-bold"
+                style={{
+                  background: "rgba(0,0,0,0.04)",
+                  color: TOKENS.textMuted,
+                  border: `1px solid ${TOKENS.divider}`,
+                  fontSize: 10,
+                }}
+              >
+                +{rec.hashtags.length - 3}
+              </span>
+            )}
+          </div>
+        )}
 
         <div
           className="flex items-center justify-between pt-3"

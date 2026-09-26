@@ -1,5 +1,5 @@
 import React from 'react';
-import { TOKENS } from '@/lib/design-tokens';
+import { Grid } from 'lucide-react';
 import { KeywordItem } from '@/lib/keyword/mock-data';
 
 interface EngagementHeatmapProps {
@@ -9,46 +9,67 @@ interface EngagementHeatmapProps {
 export function EngagementHeatmap({ keywords }: EngagementHeatmapProps) {
   const top20 = keywords.slice(0, 20);
   const maxEng = Math.max(...top20.map(k => k.engagement), 1);
+  const minEng = Math.min(...top20.map(k => k.engagement), 0);
 
   return (
-    <div style={{ background: TOKENS.card, border: `1px solid ${TOKENS.cardBorder}`, borderRadius: 16, padding: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-      <div style={{ marginBottom: 16 }}>
-        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: TOKENS.textMuted, textTransform: 'uppercase', marginBottom: 4 }}>Heatmap</p>
-        <h3 style={{ fontSize: 16, fontWeight: 800, color: TOKENS.text, margin: 0 }}>Engagement Intensity</h3>
-        <p style={{ fontSize: 12, color: TOKENS.textMuted, marginTop: 4 }}>Top 20 keywords</p>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4 }}>
-        {top20.map((kw) => {
-          const intensity = kw.engagement / maxEng;
-          const alpha = 0.1 + intensity * 0.9;
-          return (
-            <div key={kw.rank} title={`${kw.keyword}: ${kw.engagement}%`}
-              style={{
-                aspectRatio: '1',
-                borderRadius: 6,
-                background: `rgba(26,107,255,${alpha})`, // Accent color for heat intensity
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'default',
-              }}>
-              <span style={{ fontSize: 9, fontWeight: 700, color: intensity > 0.5 ? 'white' : TOKENS.text, lineHeight: 1 }}>
-                #{kw.rank}
-              </span>
-              <span style={{ fontSize: 8, color: intensity > 0.5 ? 'rgba(255,255,255,0.7)' : TOKENS.textMuted, lineHeight: 1.2, marginTop: 1 }}>
-                {kw.engagement.toFixed(1)}%
-              </span>
+    <div className="rounded-2xl bg-white dark:bg-neutral-900 border border-stone-200/80 dark:border-neutral-800 shadow-2xs p-6 flex flex-col justify-between">
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-stone-100 dark:bg-neutral-800 text-stone-700 dark:text-neutral-300">
+              <Grid className="w-4 h-4" />
             </div>
-          );
-        })}
-      </div>
+            <div>
+              <h4 className="font-black text-xs text-stone-900 dark:text-white">
+                Engagement Intensity
+              </h4>
+              <p className="text-[10px] text-stone-400 dark:text-neutral-500">
+                Heatmap intensitas 20 keyword
+              </p>
+            </div>
+          </div>
+        </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12 }}>
-        <span style={{ fontSize: 10, color: TOKENS.textMuted }}>Low</span>
-        <div style={{ flex: 1, height: 6, borderRadius: 3, background: 'linear-gradient(to right, rgba(26,107,255,0.1), rgba(26,107,255,1))' }} />
-        <span style={{ fontSize: 10, color: TOKENS.textMuted }}>High</span>
+        {/* 5x4 Heatmap Grid */}
+        <div className="grid grid-cols-5 gap-1.5 mb-4">
+          {top20.map((kw) => {
+            const intensity = Math.max(0.12, kw.engagement / maxEng);
+            const isHigh = intensity > 0.55;
+
+            return (
+              <div
+                key={kw.rank}
+                title={`${kw.keyword}: ${kw.engagement}% (${kw.frequency}% usage)`}
+                className="aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-transform hover:scale-105"
+                style={{
+                  backgroundColor: `rgba(2, 132, 199, ${intensity})`,
+                }}
+              >
+                <span
+                  className={`font-mono font-bold text-[9px] leading-none ${
+                    isHigh ? 'text-white' : 'text-stone-800 dark:text-stone-200'
+                  }`}
+                >
+                  #{kw.rank}
+                </span>
+                <span
+                  className={`font-mono text-[8px] leading-tight mt-0.5 ${
+                    isHigh ? 'text-sky-100' : 'text-stone-600 dark:text-stone-400'
+                  }`}
+                >
+                  {kw.engagement.toFixed(1)}%
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Min-Max Bar */}
+        <div className="flex items-center gap-2 text-[10px] font-mono text-stone-400 dark:text-neutral-500">
+          <span>Low ({minEng.toFixed(1)}%)</span>
+          <div className="flex-1 h-1.5 rounded-full bg-gradient-to-r from-sky-200 via-sky-400 to-sky-600 dark:from-sky-950 dark:via-sky-600 dark:to-sky-400" />
+          <span>High ({maxEng.toFixed(1)}%)</span>
+        </div>
       </div>
     </div>
   );

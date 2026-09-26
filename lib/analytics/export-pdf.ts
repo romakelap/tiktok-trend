@@ -78,8 +78,8 @@ type ContentRecommendation = {
   title: string;
   description: string;
   rationale: string;
-  keywords: string[];
-  hashtags: string[];
+  keywords?: string[];
+  hashtags?: string[];
   duration: string;
   expectedReach: string;
   confidence: number;
@@ -1720,9 +1720,12 @@ export function exportAnalyticsPdf(data: AnalyticsExportData) {
       const descLines = doc.splitTextToSize(desc, cw - 28);
       const descH = descLines.length * 3.2;
 
+      const keywords = rec.keywords || [];
+      const hashtags = rec.hashtags || [];
+
       let metaH = 0;
-      if (rec.keywords.length > 0) metaH += 3.5;
-      if (rec.hashtags.length > 0) metaH += 3.5;
+      if (keywords.length > 0) metaH += 3.5;
+      if (hashtags.length > 0) metaH += 3.5;
       if (metaH === 0) metaH = 3.5;
 
       const headerH = 11;
@@ -1797,7 +1800,7 @@ export function exportAnalyticsPdf(data: AnalyticsExportData) {
 
       const metaY = dividerY + 4;
 
-      if (rec.keywords.length > 0) {
+      if (keywords.length > 0) {
         doc.setFontSize(5.5);
         doc.setFont(FONT.sans, "bold");
         doc.setTextColor(...hexRGB(C.accent));
@@ -1805,11 +1808,11 @@ export function exportAnalyticsPdf(data: AnalyticsExportData) {
         doc.setFont(FONT.sans, "normal");
         doc.setFontSize(7);
         doc.setTextColor(C.ink);
-        doc.text(rec.keywords.slice(0, 4).join(", "), MARGIN.left + 22 + 16, metaY);
+        doc.text(keywords.slice(0, 4).join(", "), MARGIN.left + 22 + 16, metaY);
       }
 
-      if (rec.hashtags.length > 0) {
-        const hashtagY = rec.keywords.length > 0 ? metaY + 3.5 : metaY;
+      if (hashtags.length > 0) {
+        const hashtagY = keywords.length > 0 ? metaY + 3.5 : metaY;
         doc.setFontSize(5.5);
         doc.setFont(FONT.sans, "bold");
         doc.setTextColor(...hexRGB(C.accent));
@@ -1817,7 +1820,7 @@ export function exportAnalyticsPdf(data: AnalyticsExportData) {
         doc.setFont(FONT.sans, "normal");
         doc.setFontSize(7);
         doc.setTextColor(C.ink);
-        doc.text(rec.hashtags.slice(0, 4).join(" "), MARGIN.left + 22 + 16, hashtagY);
+        doc.text(hashtags.slice(0, 4).join(" "), MARGIN.left + 22 + 16, hashtagY);
       }
 
       doc.setFontSize(6);

@@ -77,9 +77,9 @@ export default function LandingFeatures() {
       icon: DownloadCloud,
       num: "08",
       title: "Export & Automated PDF Report",
-      desc: "Export dataset komprehensif ke format Excel/CSV, serta generator laporan PDF analitik komparatif berstandar eksekutif langsung dari browser.",
+      desc: "Generator laporan PDF analitik komparatif berstandar eksekutif dan export data komprehensif langsung dari browser.",
       tag: "EXPORT ENGINE",
-      link: "/export",
+      link: "/analytics",
     },
   ];
 

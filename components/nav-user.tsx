@@ -7,6 +7,7 @@ import {
   IconDotsVertical,
   IconLogout,
   IconSettings,
+  IconShieldLock,
   IconUserCircle,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
@@ -123,6 +124,14 @@ export function NavUser() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
+              {user?.role?.toUpperCase() === "ADMIN" && (
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/dashboard" className="text-emerald-600 dark:text-emerald-400 font-medium">
+                    <IconShieldLock />
+                    <span>Admin Console</span>
+                  </Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem asChild>
                 <Link href={ROUTES.profile}>
                   <IconUserCircle />

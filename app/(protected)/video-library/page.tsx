@@ -3,12 +3,11 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import {
-  Search, Filter, ChevronDown, Check,
+  Search, Filter, ChevronDown, Check, X,
   Users, Video, Eye, Flame, Crown, Sparkles, LayoutGrid, Rows3,
+  Layers, BarChart2,
 } from 'lucide-react';
 import { PageShell } from '@/components/layout/PageShell';
-import { TOKENS } from '@/lib/design-tokens';
-import { GridBg } from '@/components/layout/GridBg';
 import { apiFetch } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
 import {
@@ -24,62 +23,127 @@ import { VideoDetailDrawer } from '@/components/video-library/VideoDetailDrawer'
 import { CompareDrawer } from '@/components/video-library/CompareDrawer';
 import { CompareBar } from '@/components/video-library/CompareBar';
 
-const ShimmerCard = () => (
-  <div className="rounded-2xl p-4 space-y-4 animate-pulse"
-    style={{ background: TOKENS.card, border: `1px solid ${TOKENS.cardBorder}` }}>
-    <div className="h-36 w-full rounded-xl bg-black/5" />
-    <div className="h-5 w-3/4 rounded bg-black/5" />
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2 flex-1">
-        <div className="w-7 h-7 rounded-lg bg-black/5" />
-        <div className="space-y-1 flex-1">
-          <div className="h-3 w-16 rounded bg-black/5" />
-          <div className="h-2 w-10 rounded bg-black/5" />
+function VideoLibraryProcessingLoader() {
+  const [stepIndex, setStepIndex] = useState(0);
+
+  const steps = useMemo(() => [
+    { label: "Memuat pustaka video & metrik interaksi...", icon: Video, sub: "TikTok Video Aggregator" },
+    { label: "Menghitung engagement rate & akumulasi penonton...", icon: Eye, sub: "Engagement & Reach Analytics Pipeline" },
+    { label: "Mengidentifikasi konten trending & viral...", icon: Flame, sub: "Velocity & Trending Detection Engine" },
+  ], []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setStepIndex((prev) => (prev + 1) % steps.length);
+    }, 1200);
+    return () => clearInterval(timer);
+  }, [steps.length]);
+
+  const CurrentIcon = steps[stepIndex].icon;
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[55vh] px-4">
+      <div className="relative flex flex-col items-center max-w-md w-full text-center">
+        {/* Animated pulsing rings & Central Icon */}
+        <div className="relative mb-6 flex items-center justify-center">
+          <div className="absolute -inset-4 rounded-full bg-sky-400/20 dark:bg-sky-500/10 blur-xl animate-pulse" />
+          <div className="absolute w-24 h-24 rounded-full border border-sky-300/40 dark:border-sky-500/20 animate-ping opacity-30" style={{ animationDuration: '2.5s' }} />
+          <div className="absolute w-20 h-20 rounded-2xl border border-stone-200 dark:border-neutral-700 animate-spin" style={{ animationDuration: '10s' }} />
+          
+          <div className="relative w-16 h-16 rounded-2xl bg-white dark:bg-neutral-900 border border-stone-200/80 dark:border-neutral-700 shadow-md flex items-center justify-center text-sky-600 dark:text-sky-400">
+            <CurrentIcon className="w-7 h-7 animate-pulse transition-all duration-300" />
+          </div>
+        </div>
+
+        {/* Dynamic Step Text */}
+        <div className="space-y-1.5 min-h-[56px]">
+          <h3 className="text-sm md:text-base font-bold text-stone-900 dark:text-white transition-all duration-300">
+            {steps[stepIndex].label}
+          </h3>
+          <p className="text-xs font-mono text-stone-500 dark:text-neutral-400">
+            {steps[stepIndex].sub}
+          </p>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="w-48 h-1 bg-stone-200 dark:bg-neutral-800 rounded-full overflow-hidden mt-6">
+          <div
+            className="h-full bg-sky-600 dark:bg-sky-400 rounded-full transition-all duration-500"
+            style={{ width: `${((stepIndex + 1) / steps.length) * 100}%` }}
+          />
+        </div>
+
+        {/* Step dots */}
+        <div className="flex items-center gap-1.5 mt-3">
+          {steps.map((_, i) => (
+            <div
+              key={i}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                i === stepIndex
+                  ? 'w-6 bg-sky-600 dark:bg-sky-400'
+                  : 'w-1.5 bg-stone-200 dark:bg-neutral-700'
+              }`}
+            />
+          ))}
         </div>
       </div>
-      <div className="h-3 w-14 rounded bg-black/5" />
     </div>
-    <div className="h-10 w-full rounded-xl bg-black/5" />
-    <div className="h-2.5 w-full rounded bg-black/5" />
-    <div className="flex gap-1">
-      <div className="h-4.5 w-12 rounded bg-black/5" />
-      <div className="h-4.5 w-12 rounded bg-black/5" />
+  );
+}
+
+const ShimmerCard = () => (
+  <div className="rounded-xl p-4 space-y-4 bg-white dark:bg-neutral-900 border border-stone-200/80 dark:border-neutral-800 animate-pulse">
+    <div className="h-36 w-full rounded-lg bg-stone-100 dark:bg-neutral-800" />
+    <div className="h-4 w-3/4 rounded bg-stone-100 dark:bg-neutral-800" />
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2 flex-1">
+        <div className="w-7 h-7 rounded-lg bg-stone-100 dark:bg-neutral-800" />
+        <div className="space-y-1 flex-1">
+          <div className="h-3 w-16 rounded bg-stone-100 dark:bg-neutral-800" />
+          <div className="h-2 w-10 rounded bg-stone-100 dark:bg-neutral-800" />
+        </div>
+      </div>
+      <div className="h-3 w-14 rounded bg-stone-100 dark:bg-neutral-800" />
     </div>
+    <div className="h-10 w-full rounded-lg bg-stone-100 dark:bg-neutral-800" />
+    <div className="h-2 w-full rounded bg-stone-100 dark:bg-neutral-800" />
   </div>
 );
 
 const ShimmerRow = () => (
-  <div className="grid items-center gap-4 px-6 py-4 animate-pulse"
+  <div
+    className="grid items-center gap-4 px-6 py-4 animate-pulse border-b border-stone-100 dark:border-neutral-800"
     style={{
       gridTemplateColumns: '32px 1.6fr 0.8fr 90px 90px 90px 110px 90px',
-      borderBottom: `1px solid ${TOKENS.divider}`,
-    }}>
-    <div className="w-5 h-5 rounded bg-black/5" />
+    }}
+  >
+    <div className="w-5 h-5 rounded bg-stone-100 dark:bg-neutral-800" />
     <div className="flex items-center gap-3">
-      <div className="w-12 h-12 rounded-lg bg-black/5" />
+      <div className="w-10 h-10 rounded-lg bg-stone-100 dark:bg-neutral-800" />
       <div className="space-y-1.5 flex-1">
-        <div className="h-4 w-2/3 rounded bg-black/5" />
+        <div className="h-4 w-2/3 rounded bg-stone-100 dark:bg-neutral-800" />
         <div className="flex gap-2">
-          <div className="h-3 w-12 rounded bg-black/5" />
-          <div className="h-3 w-16 rounded bg-black/5" />
+          <div className="h-3 w-12 rounded bg-stone-100 dark:bg-neutral-800" />
+          <div className="h-3 w-16 rounded bg-stone-100 dark:bg-neutral-800" />
         </div>
       </div>
     </div>
     <div className="flex items-center gap-2">
-      <div className="w-7 h-7 rounded-md bg-black/5" />
-      <div className="h-3 w-16 rounded bg-black/5" />
+      <div className="w-6 h-6 rounded-md bg-stone-100 dark:bg-neutral-800" />
+      <div className="h-3 w-16 rounded bg-stone-100 dark:bg-neutral-800" />
     </div>
-    <div className="h-4 w-12 rounded bg-black/5" />
-    <div className="h-4 w-10 rounded bg-black/5" />
-    <div className="h-4 w-10 rounded bg-black/5" />
-    <div className="h-5 w-14 rounded bg-black/5" />
-    <div className="h-8 w-16 rounded-lg bg-black/5" />
+    <div className="h-4 w-12 rounded bg-stone-100 dark:bg-neutral-800" />
+    <div className="h-4 w-10 rounded bg-stone-100 dark:bg-neutral-800" />
+    <div className="h-4 w-10 rounded bg-stone-100 dark:bg-neutral-800" />
+    <div className="h-5 w-14 rounded bg-stone-100 dark:bg-neutral-800" />
+    <div className="h-7 w-16 rounded-lg bg-stone-100 dark:bg-neutral-800" />
   </div>
 );
 
 export default function VideoLibraryPage() {
   const [videos, setVideos]             = useState<VideoType[]>([]);
   const [isLoading, setIsLoading]       = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isKpisLoading, setIsKpisLoading] = useState(true);
   const [searchVal, setSearchVal]       = useState('');
   const [searchQuery, setSearchQuery]   = useState('');
@@ -88,7 +152,7 @@ export default function VideoLibraryPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy]             = useState('recent');
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
-  const [viewMode, setViewMode]         = useState('grid');
+  const [viewMode, setViewMode]         = useState<'grid' | 'list'>('grid');
   const [openVideo, setOpenVideo]       = useState<VideoType | null>(null);
   const [selectedIds, setSelectedIds]   = useState<number[]>([]);
   const [compareOpen, setCompareOpen]   = useState(false);
@@ -159,13 +223,13 @@ export default function VideoLibraryPage() {
       const diffDay = Math.floor(diffHour / 24);
 
       if (diffSec < 60) return 'baru saja';
-      if (diffMin < 60) return `${diffMin} menit lalu`;
-      if (diffHour < 24) return `${diffHour} jam lalu`;
+      if (diffMin < 60) return `${diffMin}m lalu`;
+      if (diffHour < 24) return `${diffHour}j lalu`;
       if (diffDay === 1) return 'kemarin';
-      if (diffDay < 30) return `${diffDay} hari lalu`;
+      if (diffDay < 30) return `${diffDay}h lalu`;
       const diffMonth = Math.floor(diffDay / 30);
-      if (diffMonth < 12) return `${diffMonth} bulan lalu`;
-      return `${Math.floor(diffMonth / 12)} tahun lalu`;
+      if (diffMonth < 12) return `${diffMonth} bln lalu`;
+      return `${Math.floor(diffMonth / 12)} th lalu`;
     };
 
     const title = item.titleBrief || 'Untitled Video';
@@ -237,13 +301,14 @@ export default function VideoLibraryPage() {
         console.error("Failed to load metadata/KPIs:", err);
       } finally {
         setIsKpisLoading(false);
+        setIsInitialLoading(false);
       }
     }
 
     loadMetadata();
   }, [mapBackendVideo]);
 
-  // 2. Fetch paginated data from API when page, pageSize, searchQuery, or accountFilter changes (under general statuses)
+  // 2. Fetch paginated data from API
   useEffect(() => {
     if (statusFilter !== 'all' && statusFilter !== 'normal') {
       return;
@@ -339,11 +404,6 @@ export default function VideoLibraryPage() {
     };
   }, [summaryData, trendingVideos]);
 
-  // Unique accounts options for selector
-  const accountOptions = useMemo(() => {
-    return trackedAccounts;
-  }, [trackedAccounts]);
-
   // Shimmer helper
   const showShimmers = (statusFilter === 'all' || statusFilter === 'normal') ? isLoading : isKpisLoading;
 
@@ -407,39 +467,65 @@ export default function VideoLibraryPage() {
   };
   
   const clearSelection = () => setSelectedIds([]);
-
   const compareMode = selectedIds.length > 0;
+
+  if (isInitialLoading) {
+    return (
+      <PageShell title="Video & Content Library">
+        <VideoLibraryProcessingLoader />
+      </PageShell>
+    );
+  }
 
   return (
     <PageShell title="Video & Content Library">
-      <div className="p-6 space-y-6">
-        {/* Sticky filter & search header */}
-        <div className="flex items-center justify-between gap-4 flex-wrap pb-2">
-          <div>
-            <h1 className="text-xl font-black flex items-center gap-2 tracking-tight" style={{ color: TOKENS.text }}>
-              Video & Content Library
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-black text-white" style={{ background: '#111' }}>
-                {statusFilter === 'trending' ? trendingCount : statusFilter === 'top' ? topCount : (isLoading ? '...' : totalItems)}
-              </span>
-            </h1>
-            <p className="text-xs" style={{ color: TOKENS.textMuted }}>
-              Telusuri, bandingkan, dan analisis performa video TikTok yang Anda lacak.
-            </p>
+      {/* Sticky Top Header Bar */}
+      <div className="sticky top-0 z-20 flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 md:px-6 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-md border-b border-stone-200/80 dark:border-neutral-800">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 flex items-center justify-center border border-sky-200/60 dark:border-sky-800/60 flex-shrink-0">
+            <Video className="w-5 h-5" />
           </div>
-
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-                style={{ color: TOKENS.textMuted }} strokeWidth={2.4} />
-              <Input value={searchVal} onChange={e => setSearchVal(e.target.value)}
-                placeholder="Cari judul video..."
-                className="w-72 pl-9 h-10 rounded-xl text-sm"
-                style={{ background: TOKENS.input, border: `1px solid ${TOKENS.inputBorder}`, color: TOKENS.text }} />
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-black text-stone-900 dark:text-white">
+                Video & Content Library
+              </h1>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/60">
+                {statusFilter === 'trending' ? trendingCount : statusFilter === 'top' ? topCount : (isLoading ? '...' : totalItems)} Video
+              </span>
             </div>
+            <p className="text-xs text-stone-500 dark:text-neutral-400">
+              Eksplorasi, bandingkan performa, dan pantau engagement seluruh video TikTok yang terindeks
+            </p>
           </div>
         </div>
 
-        {/* ── 1. KPI Row ─────────────────────────────────────── */}
+        <div className="flex items-center gap-2.5">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Cari judul atau akun..."
+              value={searchVal}
+              onChange={e => setSearchVal(e.target.value)}
+              className="w-52 sm:w-64 px-3.5 py-2 pl-9 pr-8 rounded-xl text-xs outline-none bg-stone-50 dark:bg-neutral-800 border border-stone-200/80 dark:border-neutral-700 text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-neutral-500 focus:border-sky-500 transition-colors"
+            />
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400">
+              <Search className="w-3.5 h-3.5" />
+            </div>
+            {searchVal && (
+              <button
+                onClick={() => setSearchVal('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="p-6 space-y-6">
+        {/* 1. KPI Cards */}
         <div id="video-kpis">
           <VideoKpis
             totalCount={kpis.total}
@@ -449,320 +535,325 @@ export default function VideoLibraryPage() {
           />
         </div>
 
-        {/* ── 2. Filter & Video Grid ─────────────────────────── */}
-        <div id="video-list-container" className="relative rounded-2xl overflow-hidden"
-          style={{ background: TOKENS.cardSoft, border: `1px solid ${TOKENS.cardBorder}`,
-                   boxShadow: '0 4px 24px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,1)' }}>
-          <GridBg theme="light" />
+        {/* 2. Main Content Card Container */}
+        <div className="rounded-2xl bg-white dark:bg-neutral-900 border border-stone-200/80 dark:border-neutral-800 shadow-sm overflow-hidden">
+          {/* Controls Toolbar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 p-4 md:px-6 border-b border-stone-200/80 dark:border-neutral-800 bg-stone-50/50 dark:bg-neutral-900/50">
+            {/* Status Filter Pills */}
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-stone-100 dark:bg-neutral-800 border border-stone-200/80 dark:border-neutral-700/80">
+              {[
+                { key: 'all',      label: 'Semua',    Ico: Video,    count: allCount },
+                { key: 'trending', label: 'Trending', Ico: Flame,    count: trendingCount },
+                { key: 'top',      label: 'Top',      Ico: Crown,    count: topCount },
+                { key: 'normal',   label: 'Reguler',  Ico: Video,    count: normalCount },
+              ].map(f => {
+                const active = statusFilter === f.key;
+                return (
+                  <button
+                    key={f.key}
+                    onClick={() => { setStatusFilter(f.key); setPage(0); }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      active
+                        ? 'bg-white dark:bg-neutral-900 text-stone-900 dark:text-white shadow-sm'
+                        : 'text-stone-500 hover:text-stone-800 dark:text-neutral-400 dark:hover:text-neutral-200'
+                    }`}
+                  >
+                    <f.Ico className="w-3.5 h-3.5" strokeWidth={2.2} />
+                    <span>{f.label}</span>
+                    <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-bold ${
+                      active
+                        ? 'bg-stone-900 text-white dark:bg-neutral-100 dark:text-stone-900'
+                        : 'bg-stone-200/80 dark:bg-neutral-700 text-stone-600 dark:text-neutral-400'
+                    }`}>
+                      {f.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
 
-          <div className="relative z-10">
-            {/* Filter bar */}
-            <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4"
-              style={{ borderBottom: `1px solid ${TOKENS.divider}` }}>
-              {/* Status pills */}
-              <div className="flex items-center gap-1.5 p-1 rounded-xl"
-                style={{ background: 'rgba(0,0,0,0.04)', border: `1px solid ${TOKENS.inputBorder}` }}>
+            {/* Right side options: Account, Sort, View Toggle */}
+            <div className="flex items-center gap-2.5 flex-wrap">
+              {/* Account filter dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => { setAccountDropdownOpen(!accountDropdownOpen); setSortDropdownOpen(false); }}
+                  className="h-9 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 bg-white dark:bg-neutral-900 border border-stone-200 dark:border-neutral-700 text-stone-800 dark:text-neutral-200 hover:border-stone-300 dark:hover:border-neutral-600 transition-colors shadow-sm"
+                >
+                  <Filter className="w-3.5 h-3.5 text-stone-400" />
+                  <span>Akun:</span>
+                  <span className="font-bold text-stone-900 dark:text-white">
+                    {accountFilter === 'all' ? 'Semua' : `@${accountFilter}`}
+                  </span>
+                  <ChevronDown className="w-3 h-3 text-stone-400 ml-0.5" />
+                </button>
+                {accountDropdownOpen && (
+                  <div className="absolute right-0 top-full mt-2 z-30 rounded-xl overflow-hidden w-64 bg-white dark:bg-neutral-900 border border-stone-200 dark:border-neutral-800 shadow-xl py-1 max-h-72 overflow-y-auto">
+                    <button
+                      onClick={() => { setAccountFilter('all'); setAccountDropdownOpen(false); setPage(0); }}
+                      className="w-full flex items-center gap-2.5 px-3.5 py-2 text-left hover:bg-stone-50 dark:hover:bg-neutral-800 border-b border-stone-100 dark:border-neutral-800 transition-colors"
+                    >
+                      <div className="w-6 h-6 rounded-md bg-stone-100 dark:bg-neutral-800 flex items-center justify-center text-stone-600 dark:text-neutral-300">
+                        <Users className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="font-bold text-xs flex-1 text-stone-900 dark:text-white">Semua Akun</span>
+                      {accountFilter === 'all' && <Check className="w-3.5 h-3.5 text-sky-600" />}
+                    </button>
+                    {trackedAccounts.map((opt) => {
+                      const meta = TYPE_META[opt.type as keyof typeof TYPE_META] || { solid: '#0284c7' };
+                      const sel = accountFilter === opt.username;
+                      return (
+                        <button
+                          key={opt.username}
+                          onClick={() => { setAccountFilter(opt.username); setAccountDropdownOpen(false); setPage(0); }}
+                          className="w-full flex items-center gap-2.5 px-3.5 py-2 text-left hover:bg-stone-50 dark:hover:bg-neutral-800 transition-colors"
+                        >
+                          <span
+                            className="w-6 h-6 rounded-md flex items-center justify-center text-white font-bold text-[9px] shadow-sm"
+                            style={{ background: meta.solid }}
+                          >
+                            {initialsFrom(opt.displayName || opt.username)}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-xs truncate text-stone-900 dark:text-white">@{opt.username}</p>
+                            <p className="text-[10px] truncate text-stone-400 dark:text-neutral-500">{opt.displayName}</p>
+                          </div>
+                          {sel && <Check className="w-3.5 h-3.5 text-sky-600" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Sort dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => { setSortDropdownOpen(!sortDropdownOpen); setAccountDropdownOpen(false); }}
+                  className="h-9 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 bg-white dark:bg-neutral-900 border border-stone-200 dark:border-neutral-700 text-stone-800 dark:text-neutral-200 hover:border-stone-300 dark:hover:border-neutral-600 transition-colors shadow-sm"
+                >
+                  <BarChart2 className="w-3.5 h-3.5 text-stone-400" />
+                  <span>Urutan:</span>
+                  <span className="font-bold text-stone-900 dark:text-white">
+                    {sortBy === 'recent' ? 'Terbaru' : sortBy === 'views' ? 'Views' : sortBy === 'engagement' ? 'Engagement' : 'Likes'}
+                  </span>
+                  <ChevronDown className="w-3 h-3 text-stone-400 ml-0.5" />
+                </button>
+                {sortDropdownOpen && (
+                  <div className="absolute right-0 top-full mt-2 z-30 rounded-xl overflow-hidden w-48 bg-white dark:bg-neutral-900 border border-stone-200 dark:border-neutral-800 shadow-xl py-1">
+                    {[
+                      { key: 'recent',     label: 'Terbaru' },
+                      { key: 'views',      label: 'Views Terbanyak' },
+                      { key: 'engagement', label: 'Engagement Tertinggi' },
+                      { key: 'likes',      label: 'Likes Terbanyak' },
+                    ].map((o) => (
+                      <button
+                        key={o.key}
+                        onClick={() => { setSortBy(o.key); setSortDropdownOpen(false); }}
+                        className="w-full flex items-center justify-between px-3.5 py-2 text-left hover:bg-stone-50 dark:hover:bg-neutral-800 text-xs font-semibold text-stone-800 dark:text-neutral-200 transition-colors"
+                      >
+                        <span>{o.label}</span>
+                        {sortBy === o.key && <Check className="w-3.5 h-3.5 text-sky-600" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Grid / List View toggle */}
+              <div className="flex p-0.5 rounded-xl bg-stone-100 dark:bg-neutral-800 border border-stone-200/80 dark:border-neutral-700/80">
                 {[
-                  { key: 'all',      label: 'Semua',    Ico: Video,    count: allCount },
-                  { key: 'trending', label: 'Trending', Ico: Flame,    count: trendingCount },
-                  { key: 'top',      label: 'Top',      Ico: Crown,    count: topCount },
-                  { key: 'normal',   label: 'Reguler',  Ico: Video,    count: normalCount },
-                ].map(f => {
-                  const active = statusFilter === f.key;
+                  { key: 'grid', Ico: LayoutGrid, label: 'Grid' },
+                  { key: 'list', Ico: Rows3, label: 'List' },
+                ].map(v => {
+                  const active = viewMode === v.key;
                   return (
-                    <button key={f.key} onClick={() => { setStatusFilter(f.key); setPage(0); }}
-                      className="px-3 py-1.5 rounded-lg text-xs font-black transition-all duration-200 flex items-center gap-1.5"
-                      style={{
-                        background: active ? '#fff' : 'transparent',
-                        color:      active ? TOKENS.text : TOKENS.textMuted,
-                        boxShadow:  active ? '0 1px 6px rgba(0,0,0,0.08)' : 'none',
-                        border:     active ? `1px solid ${TOKENS.inputBorder}` : '1px solid transparent',
-                      }}>
-                      <f.Ico className="w-3 h-3" strokeWidth={2.5} />
-                      {f.label}
-                      <span className="px-1.5 py-0 rounded text-[10px] font-black"
-                        style={{ background: active ? '#111' : 'rgba(0,0,0,0.08)', color: active ? '#fff' : TOKENS.textMuted }}>
-                        {f.count}
-                      </span>
+                    <button
+                      key={v.key}
+                      onClick={() => setViewMode(v.key as 'grid' | 'list')}
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                        active
+                          ? 'bg-white dark:bg-neutral-900 text-stone-900 dark:text-white shadow-sm'
+                          : 'text-stone-400 hover:text-stone-700 dark:text-neutral-400 dark:hover:text-neutral-200'
+                      }`}
+                      title={`${v.label} View`}
+                    >
+                      <v.Ico className="w-3.5 h-3.5" strokeWidth={2.2} />
                     </button>
                   );
                 })}
               </div>
-
-              {/* Right side filters */}
-              <div className="flex items-center gap-2">
-                {/* Account filter dropdown */}
-                <div className="relative">
-                  <button onClick={() => { setAccountDropdownOpen(!accountDropdownOpen); setSortDropdownOpen(false); }}
-                    className="h-9 px-3 rounded-xl text-xs font-bold flex items-center gap-2 transition-all hover:opacity-75"
-                    style={{ background: '#fff', border: `1px solid ${TOKENS.inputBorder}`, color: TOKENS.text }}>
-                    <Filter className="w-3.5 h-3.5" strokeWidth={2.5} />
-                    Akun: <span className="font-black">
-                      {accountFilter === 'all' ? 'Semua' : `@${accountFilter}`}
-                    </span>
-                    <ChevronDown className="w-3 h-3" strokeWidth={2.5} />
-                  </button>
-                  {accountDropdownOpen && (
-                    <div className="absolute right-0 top-full mt-2 z-20 rounded-xl overflow-hidden w-64"
-                      style={{ background: '#fff', border: `1px solid ${TOKENS.cardBorder}`, boxShadow: '0 12px 40px rgba(0,0,0,0.12)' }}>
-                      <button onClick={() => { setAccountFilter('all'); setAccountDropdownOpen(false); setPage(0); }}
-                        className="w-full flex items-center gap-2 px-3 py-2.5 text-left transition-all hover:bg-black/5"
-                        style={{ borderBottom: `1px solid ${TOKENS.divider}` }}>
-                        <span className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
-                          style={{ background: 'rgba(0,0,0,0.06)' }}>
-                          <Users className="w-3.5 h-3.5" style={{ color: TOKENS.text }} strokeWidth={2.2} />
-                        </span>
-                        <span className="font-black text-xs flex-1" style={{ color: TOKENS.text }}>Semua Akun</span>
-                        {accountFilter === 'all' && <Check className="w-4 h-4" style={{ color: '#111' }} strokeWidth={2.5} />}
-                      </button>
-                      {accountOptions.map((opt, i) => {
-                        const meta = TYPE_META[opt.type as keyof typeof TYPE_META] || { solid: '#111' };
-                        const sel = accountFilter === opt.username;
-                        return (
-                          <button key={opt.username}
-                            onClick={() => { setAccountFilter(opt.username); setAccountDropdownOpen(false); setPage(0); }}
-                            className="w-full flex items-center gap-2 px-3 py-2.5 text-left transition-all hover:bg-black/5"
-                            style={{ borderBottom: i < accountOptions.length - 1 ? `1px solid ${TOKENS.divider}` : 'none' }}>
-                            <span className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 text-white font-black"
-                              style={{ background: meta.solid, fontSize: 9 }}>
-                              {initialsFrom(opt.displayName)}
-                            </span>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-black text-xs truncate" style={{ color: TOKENS.text }}>@{opt.username}</p>
-                              <p className="text-[10px] truncate" style={{ color: TOKENS.textMuted }}>{opt.displayName}</p>
-                            </div>
-                            {sel && <Check className="w-4 h-4 flex-shrink-0" style={{ color: '#111' }} strokeWidth={2.5} />}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                {/* Sort dropdown */}
-                <div className="relative">
-                  <button onClick={() => { setSortDropdownOpen(!sortDropdownOpen); setAccountDropdownOpen(false); }}
-                    className="h-9 px-3 rounded-xl text-xs font-bold flex items-center gap-2 transition-all hover:opacity-75"
-                    style={{ background: '#fff', border: `1px solid ${TOKENS.inputBorder}`, color: TOKENS.text }}>
-                    Sort: <span className="font-black">
-                      {sortBy === 'recent' ? 'Terbaru' : sortBy === 'views' ? 'Most Views' : sortBy === 'engagement' ? 'Best Engagement' : 'Most Likes'}
-                    </span>
-                    <ChevronDown className="w-3 h-3" strokeWidth={2.5} />
-                  </button>
-                  {sortDropdownOpen && (
-                    <div className="absolute right-0 top-full mt-2 z-20 rounded-xl overflow-hidden w-48"
-                      style={{ background: '#fff', border: `1px solid ${TOKENS.cardBorder}`, boxShadow: '0 12px 40px rgba(0,0,0,0.12)' }}>
-                      {[
-                        { key: 'recent',     label: 'Terbaru' },
-                        { key: 'views',      label: 'Most Views' },
-                        { key: 'engagement', label: 'Best Engagement' },
-                        { key: 'likes',      label: 'Most Likes' },
-                      ].map((o, i, arr) => (
-                        <button key={o.key} onClick={() => { setSortBy(o.key); setSortDropdownOpen(false); }}
-                          className="w-full flex items-center gap-2 px-3 py-2.5 text-left transition-all hover:bg-black/5"
-                          style={{ borderBottom: i < arr.length - 1 ? `1px solid ${TOKENS.divider}` : 'none' }}>
-                          <span className="font-bold text-xs flex-1" style={{ color: TOKENS.text }}>{o.label}</span>
-                          {sortBy === o.key && <Check className="w-4 h-4" style={{ color: '#111' }} strokeWidth={2.5} />}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* View toggle */}
-                <div className="flex p-0.5 rounded-xl"
-                  style={{ background: 'rgba(0,0,0,0.04)', border: `1px solid ${TOKENS.inputBorder}` }}>
-                  {[
-                    { key: 'grid', Ico: LayoutGrid },
-                    { key: 'list', Ico: Rows3 },
-                  ].map(v => {
-                    const active = viewMode === v.key;
-                    return (
-                      <button key={v.key} onClick={() => setViewMode(v.key)}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center transition-all"
-                        style={{
-                          background: active ? '#fff' : 'transparent',
-                          color: active ? TOKENS.text : TOKENS.textMuted,
-                          boxShadow: active ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
-                        }}>
-                        <v.Ico className="w-3.5 h-3.5" strokeWidth={2.4} />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
             </div>
+          </div>
 
-            {/* Videos */}
-            <div className={viewMode === 'grid' ? 'p-6' : 'py-2'}>
-              {showShimmers ? (
-                viewMode === 'grid' ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <ShimmerCard key={i} />
-                    ))}
-                  </div>
-                ) : (
-                  <div>
-                    {/* table header */}
-                    <div className="grid items-center gap-4 px-6 py-3"
-                      style={{
-                        gridTemplateColumns: '32px 1.6fr 0.8fr 90px 90px 90px 110px 90px',
-                        borderBottom: `1px solid ${TOKENS.divider}`,
-                      }}>
-                      {['', 'Judul Video', 'Akun', 'Views', 'Likes', 'Comments', 'Engagement', ''].map((h, i) => (
-                        <span key={i} className="text-[10px] font-black uppercase tracking-widest" style={{ color: TOKENS.textMuted }}>{h}</span>
-                      ))}
-                    </div>
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <ShimmerRow key={i} />
-                    ))}
-                  </div>
-                )
-              ) : filtered.length === 0 ? (
-                <div className="text-center py-16">
-                  <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-                    style={{ background: 'rgba(0,0,0,0.04)', border: `1px solid ${TOKENS.divider}` }}>
-                    <Video className="w-6 h-6" style={{ color: TOKENS.textMuted }} strokeWidth={1.8} />
-                  </div>
-                  <p className="font-black text-sm mb-1" style={{ color: TOKENS.text }}>Tidak ada video ditemukan</p>
-                  <p className="text-xs" style={{ color: TOKENS.textMuted }}>Coba ubah filter atau kata kunci pencarian</p>
-                </div>
-              ) : viewMode === 'grid' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {filtered.map(v => (
-                    <VideoCard key={v.id} video={v}
-                      selected={selectedIds.includes(v.id)}
-                      onSelect={toggleSelect}
-                      onOpen={setOpenVideo}
-                      compareMode={compareMode} />
+          {/* Video List & Grid Content */}
+          <div className={viewMode === 'grid' ? 'p-4 md:p-6' : 'py-1'}>
+            {showShimmers ? (
+              viewMode === 'grid' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <ShimmerCard key={i} />
                   ))}
                 </div>
               ) : (
                 <div>
-                  {/* table header */}
-                  <div className="grid items-center gap-4 px-6 py-3"
+                  <div
+                    className="grid items-center gap-4 px-6 py-3 border-b border-stone-100 dark:border-neutral-800"
                     style={{
                       gridTemplateColumns: '32px 1.6fr 0.8fr 90px 90px 90px 110px 90px',
-                      borderBottom: `1px solid ${TOKENS.divider}`,
-                    }}>
+                    }}
+                  >
                     {['', 'Judul Video', 'Akun', 'Views', 'Likes', 'Comments', 'Engagement', ''].map((h, i) => (
-                      <span key={i} className="text-[10px] font-black uppercase tracking-widest" style={{ color: TOKENS.textMuted }}>{h}</span>
+                      <span key={i} className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-neutral-500">{h}</span>
                     ))}
                   </div>
-                  {filtered.map((v, idx) => (
-                    <VideoListRow key={v.id} video={v}
-                      selected={selectedIds.includes(v.id)}
-                      onSelect={toggleSelect}
-                      onOpen={setOpenVideo}
-                      compareMode={compareMode}
-                      isLast={idx === filtered.length - 1} />
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <ShimmerRow key={i} />
                   ))}
                 </div>
-              )}
-            </div>
-
-            {/* Pagination Controls */}
-            {(statusFilter === 'all' || statusFilter === 'normal') && totalPages > 1 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4"
-                style={{ borderTop: `1px solid ${TOKENS.divider}` }}>
-                {/* Left: Item range */}
-                <div className="text-xs font-bold" style={{ color: TOKENS.textMuted }}>
-                  Menampilkan <span className="font-black" style={{ color: TOKENS.text }}>{(page * pageSize) + 1}</span> - <span className="font-black" style={{ color: TOKENS.text }}>{Math.min((page + 1) * pageSize, totalItems)}</span> dari <span className="font-black" style={{ color: TOKENS.text }}>{totalItems}</span> video
+              )
+            ) : filtered.length === 0 ? (
+              <div className="text-center py-16 px-4">
+                <div className="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center bg-stone-100 dark:bg-neutral-800 text-stone-400 dark:text-neutral-500">
+                  <Video className="w-6 h-6" strokeWidth={1.8} />
                 </div>
-
-                {/* Center: Page numbers */}
-                <div className="flex items-center gap-1 flex-wrap justify-center">
-                  <button
-                    onClick={() => setPage(p => Math.max(0, p - 1))}
-                    disabled={page === 0}
-                    className="h-8 px-2.5 rounded-lg text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:bg-black/5"
-                    style={{ border: `1px solid ${TOKENS.inputBorder}`, color: TOKENS.text, background: '#fff' }}
-                  >
-                    Sebelumnya
-                  </button>
-
-                  {/* Render page numbers intelligently */}
-                  {(() => {
-                    const pages: (number | string)[] = [];
-                    const maxVisible = 5;
-                    if (totalPages <= maxVisible) {
-                      for (let i = 0; i < totalPages; i++) pages.push(i);
-                    } else {
-                      pages.push(0);
-                      if (page > 2) {
-                        pages.push('...');
-                      }
-                      const start = Math.max(1, page - 1);
-                      const end = Math.min(totalPages - 2, page + 1);
-                      for (let i = start; i <= end; i++) {
-                        pages.push(i);
-                      }
-                      if (page < totalPages - 3) {
-                        pages.push('...');
-                      }
-                      pages.push(totalPages - 1);
-                    }
-
-                    return pages.map((p, idx) => {
-                      if (p === '...') {
-                        return (
-                          <span key={`dots-${idx}`} className="px-2 text-xs font-bold" style={{ color: TOKENS.textMuted }}>
-                            ...
-                          </span>
-                        );
-                      }
-                      const active = page === p;
-                      return (
-                        <button
-                          key={p}
-                          onClick={() => setPage(Number(p))}
-                          className="w-8 h-8 rounded-lg text-xs font-black transition-all"
-                          style={{
-                            background: active ? '#111' : '#fff',
-                            color: active ? '#fff' : TOKENS.text,
-                            border: `1px solid ${active ? '#111' : TOKENS.inputBorder}`,
-                            boxShadow: active ? '0 2px 6px rgba(0,0,0,0.15)' : 'none',
-                          }}
-                        >
-                          {Number(p) + 1}
-                        </button>
-                      );
-                    });
-                  })()}
-
-                  <button
-                    onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-                    disabled={page === totalPages - 1}
-                    className="h-8 px-2.5 rounded-lg text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:bg-black/5"
-                    style={{ border: `1px solid ${TOKENS.inputBorder}`, color: TOKENS.text, background: '#fff' }}
-                  >
-                    Selanjutnya
-                  </button>
+                <h4 className="font-bold text-sm text-stone-900 dark:text-white mb-1">
+                  Tidak Ada Video Ditemukan
+                </h4>
+                <p className="text-xs text-stone-500 dark:text-neutral-400 max-w-sm mx-auto">
+                  Silakan sesuaikan filter status, akun, atau kata kunci pencarian Anda.
+                </p>
+              </div>
+            ) : viewMode === 'grid' ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                {filtered.map(v => (
+                  <VideoCard
+                    key={v.id}
+                    video={v}
+                    selected={selectedIds.includes(v.id)}
+                    onSelect={toggleSelect}
+                    onOpen={setOpenVideo}
+                    compareMode={compareMode}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div>
+                {/* Table Header */}
+                <div
+                  className="grid items-center gap-4 px-6 py-3 border-b border-stone-200/80 dark:border-neutral-800 bg-stone-50/40 dark:bg-neutral-900/40"
+                  style={{
+                    gridTemplateColumns: '32px 1.6fr 0.8fr 90px 90px 90px 110px 90px',
+                  }}
+                >
+                  {['', 'Judul Video', 'Akun', 'Views', 'Likes', 'Comments', 'Engagement', 'Aksi'].map((h, i) => (
+                    <span key={i} className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-neutral-400">
+                      {h}
+                    </span>
+                  ))}
                 </div>
-
-                {/* Right: Page size selector */}
-                <div className="flex items-center gap-2">
-                  <span className="text-xs" style={{ color: TOKENS.textMuted }}>Tampilkan:</span>
-                  <select
-                    value={pageSize}
-                    onChange={e => {
-                      setPageSize(Number(e.target.value));
-                      setPage(0);
-                    }}
-                    className="h-8 px-2 rounded-lg text-xs font-bold outline-none cursor-pointer"
-                    style={{ border: `1px solid ${TOKENS.inputBorder}`, background: '#fff', color: TOKENS.text }}
-                  >
-                    {[12, 24, 48, 96].map(sz => (
-                      <option key={sz} value={sz}>{sz} per halaman</option>
-                    ))}
-                  </select>
-                </div>
+                {filtered.map((v, idx) => (
+                  <VideoListRow
+                    key={v.id}
+                    video={v}
+                    selected={selectedIds.includes(v.id)}
+                    onSelect={toggleSelect}
+                    onOpen={setOpenVideo}
+                    compareMode={compareMode}
+                    isLast={idx === filtered.length - 1}
+                  />
+                ))}
               </div>
             )}
-            </div>
           </div>
+
+          {/* Pagination Controls */}
+          {(statusFilter === 'all' || statusFilter === 'normal') && totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-stone-200/80 dark:border-neutral-800 bg-stone-50/40 dark:bg-neutral-900/40">
+              {/* Left: Item range */}
+              <div className="text-xs text-stone-500 dark:text-neutral-400 font-medium">
+                Menampilkan <span className="font-mono font-bold text-stone-900 dark:text-white">{(page * pageSize) + 1}</span> - <span className="font-mono font-bold text-stone-900 dark:text-white">{Math.min((page + 1) * pageSize, totalItems)}</span> dari <span className="font-mono font-bold text-stone-900 dark:text-white">{totalItems}</span> video
+              </div>
+
+              {/* Center: Page numbers */}
+              <div className="flex items-center gap-1 flex-wrap justify-center">
+                <button
+                  onClick={() => setPage(p => Math.max(0, p - 1))}
+                  disabled={page === 0}
+                  className="h-8 px-3 rounded-lg text-xs font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-white dark:bg-neutral-900 border border-stone-200 dark:border-neutral-700 text-stone-700 dark:text-neutral-200 hover:bg-stone-50 dark:hover:bg-neutral-800 shadow-sm"
+                >
+                  Sebelumnya
+                </button>
+
+                {(() => {
+                  const pages: (number | string)[] = [];
+                  const maxVisible = 5;
+                  if (totalPages <= maxVisible) {
+                    for (let i = 0; i < totalPages; i++) pages.push(i);
+                  } else {
+                    pages.push(0);
+                    if (page > 2) pages.push('...');
+                    const start = Math.max(1, page - 1);
+                    const end = Math.min(totalPages - 2, page + 1);
+                    for (let i = start; i <= end; i++) pages.push(i);
+                    if (page < totalPages - 3) pages.push('...');
+                    pages.push(totalPages - 1);
+                  }
+
+                  return pages.map((p, idx) => {
+                    if (p === '...') {
+                      return (
+                        <span key={`dots-${idx}`} className="px-2 text-xs font-mono text-stone-400">
+                          ...
+                        </span>
+                      );
+                    }
+                    const active = page === p;
+                    return (
+                      <button
+                        key={p}
+                        onClick={() => setPage(Number(p))}
+                        className={`w-8 h-8 rounded-lg text-xs font-mono font-bold transition-all ${
+                          active
+                            ? 'bg-stone-900 text-white dark:bg-neutral-100 dark:text-stone-900 shadow-sm'
+                            : 'bg-white dark:bg-neutral-900 border border-stone-200 dark:border-neutral-700 text-stone-700 dark:text-neutral-300 hover:bg-stone-50 dark:hover:bg-neutral-800'
+                        }`}
+                      >
+                        {Number(p) + 1}
+                      </button>
+                    );
+                  });
+                })()}
+
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                  disabled={page === totalPages - 1}
+                  className="h-8 px-3 rounded-lg text-xs font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-white dark:bg-neutral-900 border border-stone-200 dark:border-neutral-700 text-stone-700 dark:text-neutral-200 hover:bg-stone-50 dark:hover:bg-neutral-800 shadow-sm"
+                >
+                  Selanjutnya
+                </button>
+              </div>
+
+              {/* Right: Page size selector */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-stone-500 dark:text-neutral-400">Tampilkan:</span>
+                <select
+                  value={pageSize}
+                  onChange={e => {
+                    setPageSize(Number(e.target.value));
+                    setPage(0);
+                  }}
+                  className="h-8 px-2 rounded-lg text-xs font-semibold bg-white dark:bg-neutral-900 border border-stone-200 dark:border-neutral-700 text-stone-800 dark:text-neutral-200 outline-none cursor-pointer shadow-sm"
+                >
+                  {[12, 24, 48, 96].map(sz => (
+                    <option key={sz} value={sz}>{sz} per halaman</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
         </div>
+      </div>
 
       {/* Detail drawer */}
       <VideoDetailDrawer
@@ -780,7 +871,7 @@ export default function VideoLibraryPage() {
         onRemove={toggleSelect}
       />
 
-      {/* Sticky compare bar */}
+      {/* Sticky compare floating bar */}
       <CompareBar
         count={selectedIds.length}
         onOpenCompare={() => setCompareOpen(true)}

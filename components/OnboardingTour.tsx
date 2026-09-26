@@ -187,29 +187,6 @@ export function OnboardingTour() {
             selector: "#timeposting-videos",
           },
         ];
-      case "/account-management":
-        return [
-          {
-            title: t("tour_account_welcome_title"),
-            desc: t("tour_account_welcome_desc"),
-            selector: "", // Center
-          },
-          {
-            title: t("tour_account_kpis"),
-            desc: t("tour_account_kpis_desc"),
-            selector: "#account-kpis",
-          },
-          {
-            title: t("tour_account_list"),
-            desc: t("tour_account_list_desc"),
-            selector: "#account-list-container",
-          },
-          {
-            title: t("tour_account_benchmarking"),
-            desc: t("tour_account_benchmarking_desc"),
-            selector: "#account-benchmarking",
-          },
-        ];
       case "/video-library":
         return [
           {
@@ -226,34 +203,6 @@ export function OnboardingTour() {
             title: t("tour_video_list"),
             desc: t("tour_video_list_desc"),
             selector: "#video-list-container",
-          },
-        ];
-      case "/export":
-        return [
-          {
-            title: t("tour_export_welcome_title"),
-            desc: t("tour_export_welcome_desc"),
-            selector: "", // Center
-          },
-          {
-            title: t("tour_export_summary"),
-            desc: t("tour_export_summary_desc"),
-            selector: "#export-summary",
-          },
-          {
-            title: t("tour_export_datasets"),
-            desc: t("tour_export_datasets_desc"),
-            selector: "#export-datasets",
-          },
-          {
-            title: t("tour_export_bulk"),
-            desc: t("tour_export_bulk_desc"),
-            selector: "#export-bulk",
-          },
-          {
-            title: t("tour_export_history"),
-            desc: t("tour_export_history_desc"),
-            selector: "#export-history",
           },
         ];
       case "/dashboard":
@@ -347,7 +296,7 @@ export function OnboardingTour() {
     const tourPages = [
       "/dashboard", "/analytics", "/nlp-insight",
       "/hashtag", "/keyword", "/timeposting", "/account-management",
-      "/video-library", "/export"
+      "/video-library"
     ];
     if (!tourPages.includes(pathname)) return;
 
@@ -374,7 +323,7 @@ export function OnboardingTour() {
       const tourPages = [
         "/dashboard", "/analytics", "/nlp-insight",
         "/hashtag", "/keyword", "/timeposting", "/account-management",
-        "/video-library", "/export"
+        "/video-library"
       ];
       if (!tourPages.includes(pathname)) {
         sessionStorage.setItem("play-onboarding-tour", "true");

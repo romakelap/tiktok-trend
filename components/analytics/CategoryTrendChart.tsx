@@ -171,7 +171,7 @@ export function CategoryTrendChart({ data, loading = false }: Props) {
                     <span className="flex items-center gap-0.5 ml-1" style={{ color: isHidden ? "rgba(255,255,255,0.2)" : trendC }}>
                       <TrendIcon className="w-2.5 h-2.5" />
                       <span className="text-[9px] font-black">
-                        {cat.predictedChangePct > 0 ? "+" : ""}{cat.predictedChangePct.toFixed(1)}%
+                        {(cat.predictedChangePct ?? 0) > 0 ? "+" : ""}{(cat.predictedChangePct ?? 0).toFixed(1)}%
                       </span>
                     </span>
                   </button>
@@ -258,7 +258,7 @@ export function CategoryTrendChart({ data, loading = false }: Props) {
                     <div className="flex items-center gap-1" style={{ color: trendColor }}>
                       <TIcon className="w-3 h-3" />
                       <span className="text-[9px] font-black">
-                        {cat.predictedChangePct > 0 ? "+" : ""}{cat.predictedChangePct.toFixed(1)}%
+                        {(cat.predictedChangePct ?? 0) > 0 ? "+" : ""}{(cat.predictedChangePct ?? 0).toFixed(1)}%
                       </span>
                     </div>
                     <p className="text-[8px] text-white/30">Est 7D: {estEng}%</p>

@@ -40,6 +40,7 @@ import { TOKENS } from "@/lib/design-tokens";
 import { formatNum, formatPct } from "@/lib/analytics/formatters";
 import { Mono } from "@/components/dashboard";
 import { GridBg } from "@/components/layout/GridBg";
+import { resolveAvatarUrl } from "@/lib/utils";
 
 interface VideoDetailModalProps {
   videoId: number | string;
@@ -363,9 +364,12 @@ export function VideoDetailModal({ videoId, onClose }: VideoDetailModalProps) {
                 {videoObj.coverUrl ? (
                   <div className="w-20 h-28 rounded-xl overflow-hidden flex-shrink-0 border bg-black shadow-md relative">
                     <img 
-                      src={videoObj.coverUrl} 
+                      src={resolveAvatarUrl(videoObj.coverUrl)} 
                       alt="video-cover" 
                       className="w-full h-full object-cover"
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                      crossOrigin="anonymous"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent flex items-end p-1.5 justify-center">
                       <Video className="w-3.5 h-3.5 text-white" />

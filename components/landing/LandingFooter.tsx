@@ -71,7 +71,7 @@ export default function LandingFooter() {
                 </Link>
               </li>
               <li>
-                <Link href="/export" className="hover:text-black text-stone-600">
+                <Link href="/analytics" className="hover:text-black text-stone-600">
                   Export Dataset &amp; PDF Report
                 </Link>
               </li>

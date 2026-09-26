@@ -53,9 +53,6 @@ export default function LandingNavbar() {
               <span className="font-bold text-black text-base tracking-tight">
                 TikTrend BI
               </span>
-              <span className="hidden sm:inline-block text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-stone-100 text-stone-600 border border-stone-200/80">
-                v2.5
-              </span>
             </div>
           </Link>
 

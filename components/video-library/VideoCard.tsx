@@ -1,6 +1,5 @@
 import React from 'react';
 import { Check, Eye, Heart, MessageCircle, Share2, Calendar } from 'lucide-react';
-import { TOKENS } from '@/lib/design-tokens';
 import { VideoType, formatNum } from '@/lib/video-library/mock-data';
 import { VideoThumbnail } from './VideoThumbnail';
 import { AccountMini } from './AccountMini';
@@ -15,94 +14,110 @@ interface VideoCardProps {
 }
 
 export function VideoCard({ video, selected, onSelect, onOpen, compareMode }: VideoCardProps) {
-  const visibleHashtags = video.hashtags.slice(0, 3);
-  const extraHashtags = video.hashtags.length - visibleHashtags.length;
+  const visibleHashtags = (video.hashtags || []).slice(0, 3);
+  const extraHashtags = (video.hashtags || []).length - visibleHashtags.length;
 
   return (
-    <div className="group relative rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 cursor-pointer"
+    <div
+      className={`group relative rounded-xl overflow-hidden transition-all duration-200 hover:-translate-y-1 cursor-pointer bg-white dark:bg-neutral-900 border shadow-sm hover:shadow-md ${
+        selected
+          ? 'border-sky-600 ring-2 ring-sky-500/20 dark:border-sky-500'
+          : 'border-stone-200/80 dark:border-neutral-800 hover:border-stone-300 dark:hover:border-neutral-700'
+      }`}
       onClick={() => !compareMode && onOpen(video)}
-      style={{
-        background: TOKENS.card,
-        border: `1px solid ${selected ? '#111' : TOKENS.cardBorder}`,
-        boxShadow: selected ? '0 0 0 3px rgba(17,17,17,0.08), 0 8px 24px rgba(0,0,0,0.08)' : '0 1px 3px rgba(0,0,0,0.03), 0 2px 12px rgba(0,0,0,0.04)',
-      }}>
-      <VideoThumbnail category={video.category} duration={video.duration} status={video.status} coverUrl={video.coverUrl} videoUrl={video.videoUrl}>
+    >
+      <VideoThumbnail
+        category={video.category}
+        duration={video.duration}
+        status={video.status}
+        coverUrl={video.coverUrl}
+        videoUrl={video.videoUrl}
+      >
         {/* Select checkbox */}
         {(compareMode || selected) && (
           <button
             onClick={(e) => { e.stopPropagation(); onSelect(video); }}
-            className="absolute bottom-2.5 left-2.5 w-7 h-7 rounded-lg flex items-center justify-center transition-all z-10"
-            style={{
-              background: selected ? '#fff' : 'rgba(0,0,0,0.55)',
-              backdropFilter: 'blur(8px)',
-              border: `1.5px solid ${selected ? '#fff' : 'rgba(255,255,255,0.5)'}`,
-              boxShadow: selected ? '0 0 0 3px rgba(17,17,17,0.4)' : 'none',
-            }}>
-            {selected && <Check className="w-3.5 h-3.5" style={{ color: '#111' }} strokeWidth={3} />}
+            className={`absolute bottom-2.5 left-2.5 w-6 h-6 rounded-md flex items-center justify-center transition-all z-20 ${
+              selected
+                ? 'bg-sky-600 text-white shadow-sm ring-2 ring-white/50'
+                : 'bg-black/50 text-transparent hover:bg-black/70 border border-white/60'
+            }`}
+          >
+            {selected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
           </button>
         )}
       </VideoThumbnail>
 
-      <div className="p-4">
+      <div className="p-4 space-y-3">
         {/* Title */}
-        <p className="font-black text-sm leading-snug mb-3 line-clamp-2" style={{ color: TOKENS.text, minHeight: 36 }}>
+        <h3 className="font-bold text-sm leading-snug line-clamp-2 text-stone-900 dark:text-white min-h-[38px] group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
           {video.title}
-        </p>
+        </h3>
 
-        {/* Account */}
-        <div className="flex items-center justify-between mb-3">
+        {/* Account & Date */}
+        <div className="flex items-center justify-between gap-2 pt-0.5">
           <AccountMini video={video} />
-          <span className="text-[10px] flex items-center gap-1 flex-shrink-0" style={{ color: TOKENS.textMuted }}>
-            <Calendar className="w-2.5 h-2.5" strokeWidth={2.5} />
+          <span className="text-[11px] font-medium text-stone-400 dark:text-neutral-500 flex items-center gap-1 flex-shrink-0">
+            <Calendar className="w-3 h-3" strokeWidth={2} />
             {video.publishedAt}
           </span>
         </div>
 
-        {/* Stats grid */}
-        <div className="grid grid-cols-4 gap-1.5 mb-3 p-2.5 rounded-xl"
-          style={{ background: 'rgba(0,0,0,0.025)', border: `1px solid ${TOKENS.divider}` }}>
-          {[
-            { Ico: Eye,            value: formatNum(video.views),    color: TOKENS.text },
-            { Ico: Heart,          value: formatNum(video.likes),    color: '#dc2626' },
-            { Ico: MessageCircle,  value: formatNum(video.comments), color: '#0369a1' },
-            { Ico: Share2,         value: formatNum(video.shares),   color: '#059669' },
-          ].map((s, i) => (
-            <div key={i} className="text-center">
-              <s.Ico className="w-3 h-3 mx-auto mb-0.5" style={{ color: s.color, opacity: 0.7 }} strokeWidth={2.4} />
-              <p className="font-black text-[11px]" style={{ color: TOKENS.text }}>{s.value}</p>
-            </div>
-          ))}
+        {/* Stats 4-col grid */}
+        <div className="grid grid-cols-4 gap-1 p-2 rounded-lg bg-stone-50/80 dark:bg-neutral-800/60 border border-stone-200/60 dark:border-neutral-700/60">
+          <div className="text-center">
+            <Eye className="w-3 h-3 mx-auto mb-0.5 text-stone-400 dark:text-neutral-500" strokeWidth={2.2} />
+            <p className="font-mono font-bold text-[11px] text-stone-800 dark:text-neutral-200">{formatNum(video.views)}</p>
+          </div>
+          <div className="text-center">
+            <Heart className="w-3 h-3 mx-auto mb-0.5 text-rose-500/80" strokeWidth={2.2} />
+            <p className="font-mono font-bold text-[11px] text-stone-800 dark:text-neutral-200">{formatNum(video.likes)}</p>
+          </div>
+          <div className="text-center">
+            <MessageCircle className="w-3 h-3 mx-auto mb-0.5 text-sky-500/80" strokeWidth={2.2} />
+            <p className="font-mono font-bold text-[11px] text-stone-800 dark:text-neutral-200">{formatNum(video.comments)}</p>
+          </div>
+          <div className="text-center">
+            <Share2 className="w-3 h-3 mx-auto mb-0.5 text-emerald-500/80" strokeWidth={2.2} />
+            <p className="font-mono font-bold text-[11px] text-stone-800 dark:text-neutral-200">{formatNum(video.shares)}</p>
+          </div>
         </div>
 
-        {/* Engagement bar */}
-        <div className="mb-3">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: TOKENS.textMuted }}>
+        {/* Engagement Rate Bar */}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="font-medium text-stone-500 dark:text-neutral-400">
               Engagement Rate
             </span>
-            <span className="text-xs font-black"
-              style={{ color: video.engagement >= 12 ? '#059669' : video.engagement >= 8 ? TOKENS.text : '#dc2626' }}>
+            <span className="font-mono font-bold text-stone-900 dark:text-white">
               {video.engagement}%
             </span>
           </div>
-          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: TOKENS.barBg }}>
-            <div className="h-full rounded-full transition-all duration-700"
-              style={{
-                width: `${Math.min(video.engagement * 5, 100)}%`,
-                background: `linear-gradient(to right, ${video.engagement >= 12 ? '#10b981' : '#111'}, ${video.engagement >= 12 ? '#059669' : '#000'})`,
-              }} />
+          <div className="h-1.5 w-full rounded-full bg-stone-100 dark:bg-neutral-800 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                video.engagement >= 12
+                  ? 'bg-emerald-500'
+                  : video.engagement >= 8
+                  ? 'bg-sky-500'
+                  : 'bg-stone-400 dark:bg-neutral-500'
+              }`}
+              style={{ width: `${Math.min(video.engagement * 5, 100)}%` }}
+            />
           </div>
         </div>
 
         {/* Hashtags */}
-        <div className="flex items-center gap-1 flex-wrap">
-          {visibleHashtags.map((tag: string, i: number) => (
-            <HashtagPill key={i} tag={tag} />
-          ))}
-          {extraHashtags > 0 && (
-            <HashtagPill tag={`+${extraHashtags}`} muted />
-          )}
-        </div>
+        {visibleHashtags.length > 0 && (
+          <div className="flex items-center gap-1 flex-wrap pt-0.5">
+            {visibleHashtags.map((tag: string, i: number) => (
+              <HashtagPill key={i} tag={tag} />
+            ))}
+            {extraHashtags > 0 && (
+              <HashtagPill tag={`+${extraHashtags}`} muted />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

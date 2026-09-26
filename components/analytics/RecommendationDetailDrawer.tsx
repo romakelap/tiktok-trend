@@ -238,53 +238,57 @@ export function RecommendationDetailDrawer({
             </div>
           </div>
 
-          <div>
-            <p
-              className="text-[10px] font-black uppercase tracking-widest mb-2"
-              style={{ color: TOKENS.textMuted }}
-            >
-              Suggested Keywords ({rec.keywords.length})
-            </p>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {rec.keywords.map((kw) => (
-                <span
-                  key={kw}
-                  className="px-2 py-1 rounded-md font-bold text-xs"
-                  style={{
-                    background: "rgba(0,0,0,0.04)",
-                    color: TOKENS.text,
-                    border: `1px solid ${TOKENS.divider}`,
-                  }}
-                >
-                  {kw}
-                </span>
-              ))}
+          {rec.keywords && rec.keywords.length > 0 && (
+            <div>
+              <p
+                className="text-[10px] font-black uppercase tracking-widest mb-2"
+                style={{ color: TOKENS.textMuted }}
+              >
+                Suggested Keywords ({rec.keywords.length})
+              </p>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {rec.keywords.map((kw) => (
+                  <span
+                    key={kw}
+                    className="px-2 py-1 rounded-md font-bold text-xs"
+                    style={{
+                      background: "rgba(0,0,0,0.04)",
+                      color: TOKENS.text,
+                      border: `1px solid ${TOKENS.divider}`,
+                    }}
+                  >
+                    {kw}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          <div>
-            <p
-              className="text-[10px] font-black uppercase tracking-widest mb-2"
-              style={{ color: TOKENS.textMuted }}
-            >
-              Suggested Hashtags ({rec.hashtags.length})
-            </p>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {rec.hashtags.map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center px-2 py-1 rounded-md font-bold text-xs"
-                  style={{
-                    background: "rgba(14,165,233,0.07)",
-                    color: "#0369a1",
-                    border: "1px solid rgba(14,165,233,0.2)",
-                  }}
-                >
-                  {tag}
-                </span>
-              ))}
+          {rec.hashtags && rec.hashtags.length > 0 && (
+            <div>
+              <p
+                className="text-[10px] font-black uppercase tracking-widest mb-2"
+                style={{ color: TOKENS.textMuted }}
+              >
+                Suggested Hashtags ({rec.hashtags.length})
+              </p>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {rec.hashtags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center px-2 py-1 rounded-md font-bold text-xs"
+                    style={{
+                      background: "rgba(14,165,233,0.07)",
+                      color: "#0369a1",
+                      border: "1px solid rgba(14,165,233,0.2)",
+                    }}
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div

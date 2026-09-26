@@ -2,7 +2,6 @@ import {
   IconChartBar,
   IconClock,
   IconDashboard,
-  IconFileExport,
   IconHash,
   IconKey,
   IconNotes,
@@ -38,11 +37,14 @@ export const ROUTES = {
   hashtag: "/hashtag",
   keyword: "/keyword",
   timeposting: "/timeposting",
-  accountManagement: "/account-management",
   videoLibrary: "/video-library",
-  export: "/export",
   profile: "/profile",
   settings: "/settings",
+
+  // Admin Console
+  adminDashboard: "/admin/dashboard",
+  adminPipeline: "/admin/pipeline",
+  adminUsers: "/admin/users",
 } as const;
 
 export type RouteKey = keyof typeof ROUTES;
@@ -84,20 +86,9 @@ export const SIDEBAR_NAV: SidebarNavGroup[] = [
     ],
   },
   {
-    label: "Accounts & Library",
+    label: "Media Library",
     items: [
-      {
-        title: "Account Mgmt",
-        url: ROUTES.accountManagement,
-        icon: IconUsers,
-      },
       { title: "Video Library", url: ROUTES.videoLibrary, icon: IconVideo },
-    ],
-  },
-  {
-    label: "Workspace",
-    items: [
-      { title: "Export", url: ROUTES.export, icon: IconFileExport },
     ],
   },
 ];
@@ -116,9 +107,7 @@ export const PAGE_TITLES: Record<string, string> = {
   [ROUTES.hashtag]: "Global Hashtag Analysis",
   [ROUTES.keyword]: "Global Keyword Analysis",
   [ROUTES.timeposting]: "Global Posting Time Analysis",
-  [ROUTES.accountManagement]: "Account Management",
   [ROUTES.videoLibrary]: "Video Library",
-  [ROUTES.export]: "Export",
   [ROUTES.profile]: "Profile",
   [ROUTES.settings]: "Settings",
   [ROUTES.testApi]: "API Test",

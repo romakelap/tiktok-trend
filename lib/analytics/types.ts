@@ -50,6 +50,8 @@ export interface ContentRow {
   viralProb: number;
   tier: Tier;
   clusterId: number;
+  coverUrl?: string;
+  videoUrl?: string;
 }
 
 export interface TopSlot {
@@ -75,8 +77,8 @@ export interface Recommendation {
   title: string;
   description: string;
   rationale: string;
-  keywords: string[];
-  hashtags: string[];
+  keywords?: string[];
+  hashtags?: string[];
   duration: string;
   expectedReach: string;
   confidence: number;

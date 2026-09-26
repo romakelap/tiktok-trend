@@ -1,7 +1,6 @@
 import React from 'react';
 import { AtSign } from 'lucide-react';
 import { TYPE_META, initialsFrom, VideoType } from '@/lib/video-library/mock-data';
-import { TOKENS } from '@/lib/design-tokens';
 
 interface AccountMiniProps {
   video: VideoType;
@@ -9,27 +8,25 @@ interface AccountMiniProps {
 }
 
 export function AccountMini({ video, size = 'sm' }: AccountMiniProps) {
-  const meta = TYPE_META[video.accountType as keyof typeof TYPE_META];
-  const av = size === 'sm' ? 28 : 36;
+  const meta = TYPE_META[video.accountType as keyof typeof TYPE_META] || TYPE_META.inspiration;
+  const av = size === 'sm' ? 'w-7 h-7 text-[10px]' : 'w-9 h-9 text-xs';
   return (
     <div className="flex items-center gap-2 min-w-0">
       <div
-        className="rounded-lg flex items-center justify-center flex-shrink-0 font-black text-white"
+        className={`${av} rounded-lg flex items-center justify-center flex-shrink-0 font-black text-white shadow-sm`}
         style={{
-          width: av, height: av,
-          background: `linear-gradient(135deg, ${meta.solid}, ${meta.solid}cc)`,
-          boxShadow: `0 2px 8px ${meta.solid}33`,
-          fontSize: av * 0.34,
-          letterSpacing: '-0.02em',
+          background: meta.solid,
         }}>
-        {initialsFrom(video.accountDisplayName)}
+        {initialsFrom(video.accountDisplayName || video.account)}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="font-black truncate flex items-center gap-1" style={{ color: TOKENS.text, fontSize: size === 'sm' ? 11.5 : 13 }}>
-          <AtSign className="w-2.5 h-2.5 flex-shrink-0" style={{ color: TOKENS.textMuted }} strokeWidth={2.5} />
+        <p className={`font-bold truncate flex items-center gap-1 text-stone-900 dark:text-white ${size === 'sm' ? 'text-xs' : 'text-sm'}`}>
+          <AtSign className="w-3 h-3 flex-shrink-0 text-stone-400 dark:text-neutral-500" strokeWidth={2.2} />
           {video.account}
         </p>
-        <p className="text-[10px] truncate" style={{ color: TOKENS.textMuted }}>{video.accountDisplayName}</p>
+        <p className="text-[11px] truncate text-stone-500 dark:text-neutral-400">
+          {video.accountDisplayName || video.account}
+        </p>
       </div>
     </div>
   );
