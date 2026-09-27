@@ -20,4 +20,6 @@ export { RevenueAnalysis } from "./RevenueAnalysis";
 export { VideoDetailModal } from "./VideoDetailModal";
 export { TacticalSynergyHub } from "./TacticalSynergyHub";
 export { OptimalScheduleWindow } from "./OptimalScheduleWindow";
+export { AnalyticsSetupModal } from "./AnalyticsSetupModal";
+
 

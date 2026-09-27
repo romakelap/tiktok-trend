@@ -1,157 +1,111 @@
 "use client";
 
-import { useMemo } from "react";
-import { Clock, Sparkles, TrendingUp, Calendar } from "lucide-react";
-import { DAYS, TIME_SLOTS } from "@/lib/analytics/meta";
-import type { ScheduleMatrix, TopSlot } from "@/lib/analytics/types";
-import { formatNum } from "@/lib/analytics/formatters";
-import { SCHEDULE_HEATMAP, TOP_SLOTS } from "@/lib/analytics/mock-data";
+import { Clock, ChevronRight } from "lucide-react";
+import Link from "next/link";
 
-type OptimalScheduleWindowProps = {
-  heatmap?: ScheduleMatrix;
-  topSlots?: TopSlot[];
-};
+export function OptimalScheduleWindow() {
+  const topSlots = [
+    { rank: 1, day: "Jum", time: "09–12 WIB", desc: "Prime nighttime engagement peak", score: "10.4", isPeak: true },
+    { rank: 2, day: "Kam", time: "18–21 WIB", desc: "", score: "9.7", isPeak: false },
+    { rank: 3, day: "Sab", time: "12–15 WIB", desc: "", score: "9.4", isPeak: false },
+  ];
 
-const DAY_LABELS = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
-const DAY_SHORT = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
-
-export function OptimalScheduleWindow({ heatmap, topSlots }: OptimalScheduleWindowProps) {
-  // Use fallback if empty or all zero
-  const matrix = useMemo(() => {
-    if (!heatmap || heatmap.length === 0) return SCHEDULE_HEATMAP;
-    const flat = heatmap.flat();
-    const hasData = flat.some((v) => v > 0);
-    return hasData ? heatmap : SCHEDULE_HEATMAP;
-  }, [heatmap]);
-
-  const primeSlots = useMemo(() => {
-    if (topSlots && topSlots.length > 0) return topSlots;
-    return TOP_SLOTS;
-  }, [topSlots]);
-
-  const flat = matrix.flat();
-  const max = Math.max(...(flat.length ? flat : [1]));
-  const min = Math.min(...(flat.length ? flat : [0]));
-
-  const getCellBg = (val: number) => {
-    const ratio = max === min ? 0 : (val - min) / (max - min);
-    if (ratio >= 0.85) return "bg-emerald-600 text-white font-black shadow-xs";
-    if (ratio >= 0.65) return "bg-emerald-500/80 text-white font-bold";
-    if (ratio >= 0.45) return "bg-emerald-100 text-emerald-950 dark:bg-emerald-950/60 dark:text-emerald-200 font-semibold";
-    if (ratio >= 0.25) return "bg-stone-100 text-stone-700 dark:bg-neutral-800 dark:text-neutral-300 font-medium";
-    return "bg-stone-50 text-stone-400 dark:bg-neutral-900/60 dark:text-neutral-600";
-  };
+  const days = [
+    { name: "Sen", peak: false },
+    { name: "Sel", peak: false },
+    { name: "Rab", peak: false },
+    { name: "Kam", peak: true },
+    { name: "Jum", peak: true },
+    { name: "Sab", peak: true },
+    { name: "Min", peak: false },
+  ];
 
   return (
-    <div className="rounded-2xl bg-white dark:bg-neutral-900 border border-stone-200/80 dark:border-neutral-800 shadow-sm overflow-hidden flex flex-col h-full">
-      {/* Header */}
-      <div className="p-5 border-b border-stone-200/80 dark:border-neutral-800 flex items-center justify-between bg-stone-50/40 dark:bg-neutral-900/50">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/60 dark:border-emerald-800/60 flex-shrink-0 shadow-xs">
-            <Clock className="w-4.5 h-4.5" />
-          </div>
-          <div>
-            <h3 className="text-sm font-black text-stone-900 dark:text-white uppercase tracking-tight">
-              Jam Emas Posting (7x24)
+    <div className="rounded-xl bg-white dark:bg-neutral-900 border border-stone-200 dark:border-neutral-800 p-5 shadow-xs flex flex-col justify-between">
+      <div>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Clock className="w-3.5 h-3.5 text-stone-500" />
+            <h3 className="text-xs font-bold text-stone-900 dark:text-white uppercase tracking-wide">
+              Best Posting Window
             </h3>
-            <p className="text-xs text-stone-500 dark:text-neutral-400">
-              Matriks probabilitas engagement tertinggi per hari dan jam
-            </p>
           </div>
+          <Link
+            href="/timeposting"
+            className="text-[11px] font-semibold text-sky-600 dark:text-sky-400 hover:underline flex items-center gap-0.5"
+          >
+            Detail Jadwal <ChevronRight className="w-3 h-3" />
+          </Link>
         </div>
 
-        {/* Heat Legend */}
-        <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-semibold text-stone-400">
-          <span>Rendah</span>
-          <div className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded-sm bg-stone-100 dark:bg-neutral-800" />
-            <span className="w-3 h-3 rounded-sm bg-emerald-100 dark:bg-emerald-950/60" />
-            <span className="w-3 h-3 rounded-sm bg-emerald-500/80" />
-            <span className="w-3 h-3 rounded-sm bg-emerald-600" />
-          </div>
-          <span>Puncak</span>
+        {/* 3 Ranked Slots */}
+        <div className="space-y-2 mb-4">
+          {topSlots.map((slot) => (
+            <div
+              key={slot.rank}
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all ${
+                slot.isPeak
+                  ? "bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50"
+                  : "border border-stone-200 dark:border-neutral-800"
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <span
+                  className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] ${
+                    slot.isPeak
+                      ? "bg-emerald-600 text-white"
+                      : "bg-stone-100 dark:bg-neutral-800 text-stone-500 dark:text-neutral-400"
+                  }`}
+                >
+                  {slot.rank}
+                </span>
+                <div>
+                  <p className="text-xs font-bold text-stone-900 dark:text-white">
+                    {slot.day} · {slot.time}
+                  </p>
+                  {slot.desc && (
+                    <p className="text-[9.5px] text-emerald-600 dark:text-emerald-400 font-medium">
+                      {slot.desc}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div
+                className={`text-[10px] font-black px-2 py-1 rounded font-mono ${
+                  slot.isPeak
+                    ? "bg-emerald-600 text-white"
+                    : "text-stone-500 dark:text-neutral-400 border border-stone-200 dark:border-neutral-700"
+                }`}
+              >
+                SCORE {slot.score}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      <div className="p-5 flex flex-col gap-5 flex-1 justify-between">
-        {/* Top 3 High-Confidence Prime Windows */}
-        <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-neutral-500 block mb-2.5">
-            Top 3 Jadwal Paling Optimal
+      {/* Weekly Activity Bar */}
+      <div>
+        <div className="flex items-center justify-between text-[10px] text-stone-400 dark:text-neutral-500 mb-2">
+          <span>Distribusi Aktivitas Mingguan</span>
+          <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+            Hijau = Peak Slot
           </span>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-            {primeSlots.slice(0, 3).map((slot, i) => (
-              <div
-                key={i}
-                className="p-3.5 rounded-xl border border-stone-200/80 dark:border-neutral-800 bg-stone-50/60 dark:bg-neutral-800/50 flex flex-col justify-between gap-2 hover:border-emerald-300 dark:hover:border-emerald-700/60 transition-all shadow-xs"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-md bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 text-[10px] font-black flex items-center justify-center">
-                      #{i + 1}
-                    </span>
-                    <span className="text-xs font-black text-stone-900 dark:text-white">
-                      {slot.dayLabel || slot.day}
-                    </span>
-                  </div>
-                  <span className="text-[10px] font-mono font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-800/40">
-                    {slot.expectedEng}% Eng
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-xs text-stone-500 dark:text-neutral-400 pt-1.5 border-t border-stone-200/60 dark:border-neutral-700/60">
-                  <span className="font-semibold text-stone-800 dark:text-neutral-200">{slot.timeLabel}</span>
-                  <span className="font-mono text-[11px]">
-                    ~{formatNum(slot.expectedViews)} vws
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
-
-        {/* 7-Day × 6-Slot Compact Heatmap Matrix */}
-        <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-neutral-500 block mb-2">
-            Matriks Interaksi 7 Hari
-          </span>
-          <div className="overflow-x-auto">
-            <table className="w-full text-center border-collapse min-w-[320px]">
-              <thead>
-                <tr>
-                  <th className="w-12 text-left py-1 text-[10px] font-bold uppercase text-stone-400">Hari</th>
-                  {TIME_SLOTS.map((slot: any) => (
-                    <th key={slot.range} className="py-1 text-[10px] font-bold text-stone-500 dark:text-neutral-400">
-                      {slot.range}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {DAY_SHORT.map((day, di) => (
-                  <tr key={day}>
-                    <td className="text-left py-1 text-xs font-bold text-stone-800 dark:text-neutral-200">
-                      {day}
-                    </td>
-                    {TIME_SLOTS.map((_: any, si: number) => {
-                      const val = matrix?.[di]?.[si] ?? 0;
-                      return (
-                        <td key={si} className="p-0.5">
-                          <div
-                            className={`h-7 rounded-lg flex items-center justify-center text-[10px] font-mono transition-transform hover:scale-105 cursor-default ${getCellBg(
-                              val
-                            )}`}
-                            title={`${DAY_LABELS[di]} ${TIME_SLOTS[si].range}: ${val.toFixed(1)}% Est. Engagement`}
-                          >
-                            {val.toFixed(1)}%
-                          </div>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="grid grid-cols-7 gap-1">
+          {days.map((d) => (
+            <div
+              key={d.name}
+              className={`h-6 rounded flex items-center justify-center text-[9px] font-bold ${
+                d.peak
+                  ? "bg-emerald-500 text-white"
+                  : "bg-stone-100 dark:bg-neutral-800 text-stone-500 dark:text-neutral-400"
+              }`}
+            >
+              {d.name}
+            </div>
+          ))}
         </div>
       </div>
     </div>
