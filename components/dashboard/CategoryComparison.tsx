@@ -1,15 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  BarChart2,
-  Sparkles,
-  ChevronRight,
-  Eye,
-  Activity,
-  Video,
-  Zap,
-} from "lucide-react";
+import { MoreHorizontal, ChevronRight, Sparkles } from "lucide-react";
 import {
   ComposedChart,
   Bar,
@@ -37,7 +29,6 @@ export function CategoryComparison({
   selectedCategory,
   categories = CATEGORIES,
 }: CategoryComparisonProps) {
-  // Toggle visibility of specific lines for flexible viewing
   const [visibleSeries, setVisibleSeries] = useState({
     views: true,
     content: true,
@@ -49,7 +40,6 @@ export function CategoryComparison({
     setVisibleSeries((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // Transform category data for ComposedChart
   const chartData = categories.map((cat) => ({
     id: cat.id,
     name: cat.label,
@@ -60,7 +50,6 @@ export function CategoryComparison({
     color: cat.color,
   }));
 
-  // Average Engagement benchmark
   const avgEngagement = Number(
     (
       chartData.reduce((acc, curr) => acc + curr.engagement, 0) /
@@ -68,11 +57,9 @@ export function CategoryComparison({
     ).toFixed(2)
   );
 
-  // Maximum values for scaled axes
   const maxViews = Math.max(...chartData.map((d) => d.views), 1);
   const maxVideos = Math.max(...chartData.map((d) => d.videos), 1);
 
-  // Sort categories by composite performance for the quick matrix cards
   const sortedMatrix = [...categories].sort((a, b) => {
     const scoreA =
       ((a.views || 0) / maxViews) * 30 +
@@ -85,433 +72,363 @@ export function CategoryComparison({
     return scoreB - scoreA;
   });
 
+  // Focused segment — the selected or top category
+  const focusedCat = selectedCategory
+    ? categories.find((c) => c.id === selectedCategory) ?? sortedMatrix[0]
+    : sortedMatrix[0];
+
+  const viralPctFocused = Math.round((focusedCat.viralProb || 0.5) * 100);
+
   return (
-    <div className="rounded-xl bg-white dark:bg-neutral-900 border border-stone-200/80 dark:border-neutral-800 shadow-xs overflow-hidden">
-      {/* Header & Interactive Legend Controls */}
-      <div className="flex items-center justify-between flex-wrap gap-4 px-6 py-4 border-b border-stone-200/80 dark:border-neutral-800 bg-stone-50/50 dark:bg-neutral-900/50">
+    <div className="rounded-xl bg-white dark:bg-neutral-900 border border-stone-200 dark:border-neutral-800 overflow-hidden">
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-stone-200 dark:border-neutral-800">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-stone-900 dark:bg-white text-white dark:text-stone-900 flex items-center justify-center">
-            <BarChart2 className="w-4 h-4" strokeWidth={2.2} />
-          </div>
-          <div>
-            <h2 className="text-sm font-bold text-stone-900 dark:text-white">
-              Category Performance Matrix (Reach, Content & Virality)
-            </h2>
-            <p className="text-xs text-stone-500 dark:text-neutral-400">
-              Evaluasi komprehensif: Volume Jangkauan (Bar), Total Konten (Line), Rasio Interaksi (Line), dan Peluang Viral (Line)
-            </p>
-          </div>
+          <span className="text-sm font-bold text-stone-900 dark:text-white">
+            Category Performance Matrix
+          </span>
+          <span className="text-xs text-stone-400 dark:text-neutral-500">
+            Reach, Total Konten & Peluang Virality
+          </span>
         </div>
 
-        {/* Interactive Filter Legend (Click to show/hide) */}
-        <div className="flex items-center flex-wrap gap-3 text-xs">
-          {/* 1. Views Bar */}
+        {/* Legend */}
+        <div className="flex items-center gap-4 text-xs">
           <button
             type="button"
             onClick={() => toggleSeries("views")}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border transition-all cursor-pointer ${
-              visibleSeries.views
-                ? "bg-sky-50 dark:bg-sky-950/40 border-sky-300 dark:border-sky-800 text-sky-800 dark:text-sky-300 font-semibold"
-                : "bg-stone-100 dark:bg-neutral-800 border-stone-200 dark:border-neutral-700 text-stone-400 opacity-60"
-            }`}
-            title="Klik untuk tampilkan/sembunyikan bar Total Views"
+            className={`flex items-center gap-1.5 transition-opacity cursor-pointer ${visibleSeries.views ? "opacity-100" : "opacity-30"}`}
           >
-            <span className="w-2.5 h-2.5 rounded-sm bg-sky-500 shadow-xs" />
-            <span>Total Views (Bar)</span>
+            <span className="w-3 h-3 rounded-sm bg-sky-500 flex-shrink-0" />
+            <span className="text-stone-600 dark:text-neutral-300 font-medium">Total Views</span>
           </button>
-
-          {/* 2. Content Volume Line */}
           <button
             type="button"
             onClick={() => toggleSeries("content")}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border transition-all cursor-pointer ${
-              visibleSeries.content
-                ? "bg-violet-50 dark:bg-violet-950/40 border-violet-300 dark:border-violet-800 text-violet-800 dark:text-violet-300 font-semibold"
-                : "bg-stone-100 dark:bg-neutral-800 border-stone-200 dark:border-neutral-700 text-stone-400 opacity-60"
-            }`}
-            title="Klik untuk tampilkan/sembunyikan garis Total Konten"
+            className={`flex items-center gap-1.5 transition-opacity cursor-pointer ${visibleSeries.content ? "opacity-100" : "opacity-30"}`}
           >
-            <span className="w-2.5 h-0.5 bg-violet-500 flex items-center justify-center">
-              <span className="w-1.5 h-1.5 bg-violet-500 rounded-xs" />
-            </span>
-            <span>Total Konten (Line)</span>
+            <span className="w-4 h-0.5 bg-violet-500 flex-shrink-0" />
+            <span className="text-stone-600 dark:text-neutral-300 font-medium">Total Konten</span>
           </button>
-
-          {/* 3. Engagement Rate Line */}
           <button
             type="button"
             onClick={() => toggleSeries("engagement")}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border transition-all cursor-pointer ${
-              visibleSeries.engagement
-                ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 font-semibold"
-                : "bg-stone-100 dark:bg-neutral-800 border-stone-200 dark:border-neutral-700 text-stone-400 opacity-60"
-            }`}
-            title="Klik untuk tampilkan/sembunyikan garis Engagement Rate"
+            className={`flex items-center gap-1.5 transition-opacity cursor-pointer ${visibleSeries.engagement ? "opacity-100" : "opacity-30"}`}
           >
-            <span className="w-2.5 h-0.5 bg-emerald-500 flex items-center justify-center">
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-            </span>
-            <span>Engagement Rate %</span>
+            <span className="w-4 h-0.5 bg-emerald-500 flex-shrink-0" />
+            <span className="text-stone-600 dark:text-neutral-300 font-medium">Engagement Rate</span>
           </button>
-
-          {/* 4. Viral Probability Line */}
           <button
             type="button"
             onClick={() => toggleSeries("viral")}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border transition-all cursor-pointer ${
-              visibleSeries.viral
-                ? "bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300 font-semibold"
-                : "bg-stone-100 dark:bg-neutral-800 border-stone-200 dark:border-neutral-700 text-stone-400 opacity-60"
-            }`}
-            title="Klik untuk tampilkan/sembunyikan garis Peluang Viral"
+            className={`flex items-center gap-1.5 transition-opacity cursor-pointer ${visibleSeries.viral ? "opacity-100" : "opacity-30"}`}
           >
-            <span className="w-2.5 h-0.5 bg-amber-500 flex items-center justify-center">
-              <span className="w-1.5 h-1.5 bg-amber-500 rotate-45" />
-            </span>
-            <span>Peluang Viral %</span>
+            <span className="w-4 h-0.5 bg-amber-500 flex-shrink-0" />
+            <span className="text-stone-600 dark:text-neutral-300 font-medium">Peluang Viral</span>
           </button>
         </div>
       </div>
 
-      {/* Main Dual-Axis Composed Chart */}
-      <div className="p-6">
-        <div className="h-80 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart
-              data={chartData}
-              margin={{ top: 20, right: 24, left: 10, bottom: 8 }}
-              onClick={(e) => {
-                if (e && e.activePayload && e.activePayload.length > 0) {
-                  const catId = e.activePayload[0].payload.id as CategoryId;
-                  onSelectCategory(catId);
-                }
-              }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                vertical={false}
-                stroke="rgba(0,0,0,0.06)"
-              />
-              <XAxis
-                dataKey="name"
-                axisLine={{ stroke: "rgba(0,0,0,0.12)" }}
-                tickLine={false}
-                tick={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                  fill: "rgb(87, 83, 78)",
+      {/* ── Body: Chart (left) + Focused Segment Panel (right) ── */}
+      <div className="flex divide-x divide-stone-200 dark:divide-neutral-800">
+        {/* Chart area - 2/3 */}
+        <div className="flex-1 min-w-0 p-5">
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart
+                data={chartData}
+                margin={{ top: 16, right: 16, left: 0, bottom: 0 }}
+                onClick={(e) => {
+                  if (e && e.activePayload && e.activePayload.length > 0) {
+                    const catId = e.activePayload[0].payload.id as CategoryId;
+                    onSelectCategory(catId);
+                  }
                 }}
-              />
-
-              {/* Left Y-Axis: Views Volume (Scaled with proper B / M / K) */}
-              <YAxis
-                yAxisId="views"
-                orientation="left"
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) => fmt(v)}
-                tick={{
-                  fontSize: 10.5,
-                  fontWeight: 600,
-                  fill: "#0ea5e9",
-                }}
-              />
-
-              {/* Dedicated Content Volume Axis (for scale balance) */}
-              <YAxis
-                yAxisId="content"
-                orientation="left"
-                hide={true}
-                domain={[0, maxVideos * 1.2]}
-              />
-
-              {/* Right Y-Axis: Rates & Percentages (0% - 100%) */}
-              <YAxis
-                yAxisId="rates"
-                orientation="right"
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) => `${v}%`}
-                domain={[0, 100]}
-                tick={{
-                  fontSize: 10.5,
-                  fontWeight: 600,
-                  fill: "#10b981",
-                }}
-              />
-
-              {/* Reference line for Average Engagement */}
-              {visibleSeries.engagement && (
-                <ReferenceLine
-                  yAxisId="rates"
-                  y={avgEngagement}
-                  stroke="#10b981"
+              >
+                <CartesianGrid
                   strokeDasharray="3 3"
-                  strokeOpacity={0.45}
-                  label={{
-                    value: `Avg ER: ${avgEngagement}%`,
-                    position: "insideTopRight",
-                    fontSize: 10,
-                    fill: "#10b981",
-                    fontWeight: 700,
+                  vertical={false}
+                  stroke="rgba(0,0,0,0.05)"
+                />
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 11, fontWeight: 600, fill: "rgb(120,113,108)" }}
+                  tickFormatter={(v, i) => {
+                    const idx = sortedMatrix.findIndex((c) => c.label === v);
+                    const rank = idx + 1;
+                    return `#${rank} ${v}`;
                   }}
                 />
-              )}
-
-              {/* Custom Tooltip */}
-              <Tooltip
-                content={({ active, payload }) => {
-                  if (!active || !payload || !payload.length) return null;
-                  const data = payload[0].payload;
-                  return (
-                    <div className="rounded-xl p-4 bg-stone-900 text-white shadow-2xl border border-stone-800 text-xs min-w-[220px]">
-                      <div className="flex items-center justify-between border-b border-stone-800 pb-2 mb-2.5">
-                        <span className="font-bold text-sm text-white">
-                          {data.name}
-                        </span>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30">
-                          Viral {data.viralScore}%
-                        </span>
-                      </div>
-
-                      <div className="space-y-2 font-mono text-[11px]">
-                        <div className="flex items-center justify-between text-sky-400">
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-xs bg-sky-500" />
-                            Total Views:
-                          </span>
-                          <strong>{fmt(data.views)}</strong>
-                        </div>
-
-                        <div className="flex items-center justify-between text-violet-400">
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-xs bg-violet-500" />
-                            Total Konten:
-                          </span>
-                          <strong>{fmt(data.videos)} video</strong>
-                        </div>
-
-                        <div className="flex items-center justify-between text-emerald-400">
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                            Engagement Rate:
-                          </span>
-                          <strong>{data.engagement}%</strong>
-                        </div>
-
-                        <div className="flex items-center justify-between text-amber-400">
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-2 h-2 rotate-45 bg-amber-500" />
-                            Peluang Viral:
-                          </span>
-                          <strong>{data.viralScore}%</strong>
-                        </div>
-                      </div>
-
-                      <div className="mt-3 pt-2 border-t border-stone-800 text-[10.5px] text-stone-400 text-center font-sans">
-                        Klik untuk drilldown detail kategori
-                      </div>
-                    </div>
-                  );
-                }}
-              />
-
-              {/* 1. Bar: Total Views */}
-              {visibleSeries.views && (
-                <Bar
+                <YAxis
                   yAxisId="views"
-                  dataKey="views"
-                  name="Total Views"
-                  fill="#0ea5e9"
-                  radius={[6, 6, 0, 0]}
-                  maxBarSize={40}
-                  className="cursor-pointer transition-opacity hover:opacity-85"
+                  orientation="left"
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) => fmt(v)}
+                  tick={{ fontSize: 10, fontWeight: 500, fill: "#0ea5e9" }}
                 />
-              )}
-
-              {/* 2. Line: Total Content (Videos) */}
-              {visibleSeries.content && (
-                <Line
+                <YAxis
                   yAxisId="content"
-                  type="monotone"
-                  dataKey="videos"
-                  name="Total Konten"
-                  stroke="#8b5cf6"
-                  strokeWidth={2.5}
-                  strokeDasharray="4 2"
-                  dot={{
-                    r: 4,
-                    fill: "#8b5cf6",
-                    stroke: "#ffffff",
-                    strokeWidth: 2,
-                  }}
-                  activeDot={{
-                    r: 6,
-                    fill: "#8b5cf6",
-                    stroke: "#ffffff",
-                    strokeWidth: 2,
-                  }}
-                  className="cursor-pointer"
+                  orientation="left"
+                  hide={true}
+                  domain={[0, maxVideos * 1.2]}
                 />
-              )}
-
-              {/* 3. Line: Engagement Rate % (Scaled to 0-100) */}
-              {visibleSeries.engagement && (
-                <Line
+                <YAxis
                   yAxisId="rates"
-                  type="monotone"
-                  dataKey="engagement"
-                  name="Engagement Rate"
-                  stroke="#10b981"
-                  strokeWidth={3}
-                  dot={{
-                    r: 5,
-                    fill: "#10b981",
-                    stroke: "#ffffff",
-                    strokeWidth: 2,
-                  }}
-                  activeDot={{
-                    r: 7,
-                    fill: "#10b981",
-                    stroke: "#ffffff",
-                    strokeWidth: 2,
-                  }}
-                  className="cursor-pointer"
+                  orientation="right"
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) => `${v}%`}
+                  domain={[0, 100]}
+                  tick={{ fontSize: 10, fontWeight: 500, fill: "#10b981" }}
                 />
-              )}
 
-              {/* 4. Line: Viral Probability % */}
-              {visibleSeries.viral && (
-                <Line
-                  yAxisId="rates"
-                  type="monotone"
-                  dataKey="viralScore"
-                  name="Peluang Viral"
-                  stroke="#f59e0b"
-                  strokeWidth={2.5}
-                  dot={{
-                    r: 4,
-                    fill: "#f59e0b",
-                    stroke: "#ffffff",
-                    strokeWidth: 2,
+                {visibleSeries.engagement && (
+                  <ReferenceLine
+                    yAxisId="rates"
+                    y={avgEngagement}
+                    stroke="#10b981"
+                    strokeDasharray="4 2"
+                    strokeOpacity={0.4}
+                    label={{
+                      value: `Avg ER: ${avgEngagement}%`,
+                      position: "insideTopRight",
+                      fontSize: 9.5,
+                      fill: "#10b981",
+                      fontWeight: 700,
+                    }}
+                  />
+                )}
+
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (!active || !payload || !payload.length) return null;
+                    const data = payload[0].payload;
+                    return (
+                      <div className="rounded-lg p-3 bg-stone-900 text-white shadow-xl border border-stone-800 text-xs min-w-[200px]">
+                        <div className="font-bold text-sm mb-2 pb-1.5 border-b border-stone-700">
+                          {data.name}
+                        </div>
+                        <div className="space-y-1.5 font-mono text-[11px]">
+                          {visibleSeries.views && (
+                            <div className="flex justify-between gap-4">
+                              <span className="text-sky-400">Total Views</span>
+                              <strong>{fmt(data.views)}</strong>
+                            </div>
+                          )}
+                          {visibleSeries.content && (
+                            <div className="flex justify-between gap-4">
+                              <span className="text-violet-400">Konten</span>
+                              <strong>{fmt(data.videos)}</strong>
+                            </div>
+                          )}
+                          {visibleSeries.engagement && (
+                            <div className="flex justify-between gap-4">
+                              <span className="text-emerald-400">Engagement</span>
+                              <strong>{data.engagement}%</strong>
+                            </div>
+                          )}
+                          {visibleSeries.viral && (
+                            <div className="flex justify-between gap-4">
+                              <span className="text-amber-400">Viral</span>
+                              <strong>{data.viralScore}%</strong>
+                            </div>
+                          )}
+                        </div>
+                        <div className="mt-2 pt-1.5 border-t border-stone-700 text-[9.5px] text-stone-400 text-center">
+                          Klik untuk drilldown
+                        </div>
+                      </div>
+                    );
                   }}
-                  activeDot={{
-                    r: 6,
-                    fill: "#f59e0b",
-                    stroke: "#ffffff",
-                    strokeWidth: 2,
-                  }}
-                  className="cursor-pointer"
                 />
-              )}
-            </ComposedChart>
-          </ResponsiveContainer>
+
+                {visibleSeries.views && (
+                  <Bar
+                    yAxisId="views"
+                    dataKey="views"
+                    fill="#0ea5e9"
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={48}
+                    className="cursor-pointer"
+                    opacity={0.85}
+                  />
+                )}
+                {visibleSeries.content && (
+                  <Line
+                    yAxisId="content"
+                    type="monotone"
+                    dataKey="videos"
+                    stroke="#8b5cf6"
+                    strokeWidth={2}
+                    strokeDasharray="5 3"
+                    dot={{ r: 3, fill: "#8b5cf6", stroke: "#fff", strokeWidth: 2 }}
+                    activeDot={{ r: 5 }}
+                    className="cursor-pointer"
+                  />
+                )}
+                {visibleSeries.engagement && (
+                  <Line
+                    yAxisId="rates"
+                    type="monotone"
+                    dataKey="engagement"
+                    stroke="#10b981"
+                    strokeWidth={2.5}
+                    dot={{ r: 3, fill: "#10b981", stroke: "#fff", strokeWidth: 2 }}
+                    activeDot={{ r: 5 }}
+                    className="cursor-pointer"
+                  />
+                )}
+                {visibleSeries.viral && (
+                  <Line
+                    yAxisId="rates"
+                    type="monotone"
+                    dataKey="viralScore"
+                    stroke="#f59e0b"
+                    strokeWidth={2}
+                    dot={{ r: 3, fill: "#f59e0b", stroke: "#fff", strokeWidth: 2 }}
+                    activeDot={{ r: 5 }}
+                    className="cursor-pointer"
+                  />
+                )}
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Focused Segment Panel - 1/3 */}
+        <div className="w-72 flex-shrink-0 p-5 flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <span className="text-[9.5px] font-bold tracking-widest text-stone-400 dark:text-neutral-500 uppercase">
+              Focused Segment
+            </span>
+            <button type="button" className="text-stone-400 hover:text-stone-600 dark:hover:text-neutral-200 transition-colors cursor-pointer">
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-black text-stone-900 dark:text-white tracking-tight leading-tight">
+              {focusedCat.label}
+            </h3>
+          </div>
+
+          {/* 2-col metrics */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-[10px] text-stone-400 dark:text-neutral-500 mb-0.5">Total views</p>
+              <p className="text-xl font-black text-stone-900 dark:text-white">{fmt(focusedCat.views)}</p>
+              <p className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5">+18.6%</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-stone-400 dark:text-neutral-500 mb-0.5">Engagement</p>
+              <p className="text-xl font-black text-emerald-600 dark:text-emerald-400">
+                {focusedCat.engagement.toFixed(2)}%
+              </p>
+              <p className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5">+0.22%</p>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-stone-100 dark:border-neutral-800" />
+
+          {/* Recommended action */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+              <span className="text-[11px] font-bold text-stone-900 dark:text-white">Recommended action</span>
+            </div>
+            <p className="text-[11px] text-stone-500 dark:text-neutral-400 leading-relaxed">
+              {focusedCat.insight ||
+                "Content before-after performs 3× better. Weekend slots are strongest."}
+            </p>
+          </div>
+
+          {/* Open deep dive link */}
+          <div className="mt-auto">
+            <button
+              type="button"
+              onClick={() => onSelectCategory(focusedCat.id)}
+              className="flex items-center gap-1 text-xs font-semibold text-sky-600 dark:text-sky-400 hover:underline cursor-pointer"
+            >
+              <span>Open deep dive</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Category Performance Matrix Cards (5 Categories) */}
-      <div className="px-6 pb-6 pt-1">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+      {/* ── Category Tabs Row ── */}
+      <div className="border-t border-stone-200 dark:border-neutral-800 overflow-x-auto">
+        <div className="flex min-w-max">
           {sortedMatrix.map((cat, idx) => {
             const isSelected = selectedCategory === cat.id;
             const rank = idx + 1;
             const viralPct = Math.round((cat.viralProb || 0.5) * 100);
 
             return (
-              <div
+              <button
                 key={cat.id}
+                type="button"
                 onClick={() => onSelectCategory(cat.id)}
-                className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
+                className={`flex-1 min-w-[160px] px-4 py-3 text-left border-r last:border-r-0 border-stone-200 dark:border-neutral-800 transition-all cursor-pointer ${
                   isSelected
-                    ? "bg-sky-50/50 dark:bg-sky-950/20 border-sky-500 dark:border-sky-400 shadow-xs ring-1 ring-sky-500/20"
-                    : "bg-stone-50/60 dark:bg-neutral-800/40 border-stone-200/80 dark:border-neutral-800 hover:border-stone-400 dark:hover:border-neutral-700 hover:bg-white dark:hover:bg-neutral-900"
+                    ? "bg-stone-50 dark:bg-neutral-800/60 border-t-2 border-t-sky-500"
+                    : "hover:bg-stone-50/60 dark:hover:bg-neutral-800/30 border-t-2 border-t-transparent"
                 }`}
               >
-                {/* Header Card */}
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`w-5 h-5 rounded-md flex items-center justify-center font-mono font-bold text-[10px] ${
-                        rank === 1
-                          ? "bg-stone-900 text-white dark:bg-white dark:text-stone-900 ring-1 ring-emerald-500/30"
-                          : "bg-stone-200/80 dark:bg-neutral-700 text-stone-700 dark:text-neutral-300"
-                      }`}
-                    >
-                      #{rank}
+                {/* Rank + name + badge */}
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className="text-[10px] font-black text-stone-400 dark:text-neutral-500">
+                    #{rank}
+                  </span>
+                  <span className={`text-xs font-bold ${isSelected ? "text-stone-900 dark:text-white" : "text-stone-700 dark:text-neutral-200"}`}>
+                    {cat.label}
+                  </span>
+                  {isSelected && (
+                    <span className="px-1.5 py-0.5 text-[9px] font-bold bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-400 rounded">
+                      Sedang Dilihat
                     </span>
-                    <span className="text-xs font-bold text-stone-900 dark:text-white truncate">
-                      {cat.label}
+                  )}
+                  {rank > 1 && (
+                    <span className="px-1.5 py-0.5 text-[9px] font-bold text-stone-400 dark:text-neutral-500 border border-stone-200 dark:border-neutral-700 rounded">
+                      Klaster {String(rank).padStart(2, "0")}
                     </span>
-                  </div>
-                  <cat.Ico className="w-3.5 h-3.5 text-stone-400" />
+                  )}
                 </div>
 
-                {/* 4 Stats Grid */}
-                <div className="space-y-1 text-[11px] font-mono">
-                  {/* Views */}
-                  <div className="flex items-center justify-between text-stone-600 dark:text-neutral-400">
-                    <span className="text-[10px] font-bold text-sky-600 dark:text-sky-400">
-                      Views:
-                    </span>
-                    <strong className="text-stone-900 dark:text-white">
-                      {fmt(cat.views)}
-                    </strong>
+                {/* 3-col stats */}
+                <div className="grid grid-cols-3 gap-1">
+                  <div>
+                    <p className="text-[9px] font-bold text-stone-400 dark:text-neutral-500 uppercase">Views</p>
+                    <p className="text-xs font-bold text-stone-900 dark:text-white">{fmt(cat.views)}</p>
                   </div>
-
-                  {/* Konten */}
-                  <div className="flex items-center justify-between text-stone-600 dark:text-neutral-400">
-                    <span className="text-[10px] font-bold text-violet-600 dark:text-violet-400">
-                      Konten:
-                    </span>
-                    <strong className="text-stone-900 dark:text-white">
-                      {fmt(cat.videos)}
-                    </strong>
+                  <div>
+                    <p className="text-[9px] font-bold text-stone-400 dark:text-neutral-500 uppercase">Engage</p>
+                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{cat.engagement.toFixed(2)}%</p>
                   </div>
-
-                  {/* Engagement */}
-                  <div className="flex items-center justify-between text-stone-600 dark:text-neutral-400">
-                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                      Engage:
-                    </span>
-                    <strong className="text-emerald-600 dark:text-emerald-400 font-bold">
-                      {cat.engagement.toFixed(2)}%
-                    </strong>
-                  </div>
-
-                  {/* Viral Score */}
-                  <div className="flex items-center justify-between text-stone-600 dark:text-neutral-400">
-                    <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">
-                      Viral:
-                    </span>
-                    <strong className="text-amber-600 dark:text-amber-400 font-bold">
-                      {viralPct}%
-                    </strong>
+                  <div>
+                    <p className="text-[9px] font-bold text-stone-400 dark:text-neutral-500 uppercase">Viral</p>
+                    <p className="text-xs font-bold text-amber-600 dark:text-amber-400">{viralPct}%</p>
                   </div>
                 </div>
-
-                {isSelected && (
-                  <div className="mt-2.5 pt-1.5 border-t border-sky-200 dark:border-sky-800 text-[10px] font-bold text-sky-700 dark:text-sky-400 flex items-center justify-center gap-1">
-                    <span>Sedang Dilihat</span>
-                    <ChevronRight className="w-3 h-3" />
-                  </div>
-                )}
-              </div>
+              </button>
             );
           })}
         </div>
       </div>
 
-      {/* Footer Insight Strip */}
-      <div className="px-6 py-3.5 border-t border-stone-200/80 dark:border-neutral-800 bg-stone-50/50 dark:bg-neutral-900/50 flex flex-wrap items-center justify-between gap-3 text-xs text-stone-500 dark:text-neutral-400">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
-          <span>
-            Korelasi: Volume konten tinggi (misal: <strong className="text-stone-900 dark:text-white">Lifestyle</strong>) mendorong jangkauan views besar, namun efisiensi interaksi & peluang viral tertinggi dicapai oleh sektor <strong className="text-stone-900 dark:text-white">Komedi</strong>.
-          </span>
+      {/* ── Footer Insight Strip ── */}
+      <div className="px-5 py-2.5 border-t border-stone-100 dark:border-neutral-800 bg-stone-50/60 dark:bg-neutral-900/60 flex items-center gap-2">
+        <div className="w-4 h-4 rounded-full bg-sky-500 flex items-center justify-center flex-shrink-0">
+          <span className="text-white text-[8px] font-black">i</span>
         </div>
-        <div className="text-[11px] font-mono">
-          Klik nama metrik di atas untuk filter kurva
-        </div>
+        <p className="text-[11px] text-stone-500 dark:text-neutral-400 italic">
+          <strong className="text-stone-700 dark:text-neutral-200 not-italic">Korelasi Strategis:</strong>{" "}
+          Volume konten tinggi (misal: <strong className="text-stone-800 dark:text-white not-italic">Lifestyle</strong>) mendorong jangkauan views besar, namun efisiensi interaksi & peluang viral tertinggi dicapai oleh sektor <strong className="text-stone-800 dark:text-white not-italic">Komedi</strong>.
+        </p>
       </div>
     </div>
   );

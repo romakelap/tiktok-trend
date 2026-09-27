@@ -4,75 +4,61 @@ import Link from "next/link";
 
 export default function LandingFooter() {
   return (
-    <footer className="bg-white border-t border-stone-200/60 py-12 sm:py-16 px-4 sm:px-6 lg:px-8 text-xs text-stone-500 text-left">
-      <div className="max-w-5xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-8 sm:pb-12 border-b border-stone-100">
-          
-          {/* Brand & Academic Info */}
+    <footer className="bg-white dark:bg-neutral-950 border-t border-stone-200/80 dark:border-neutral-800 py-12 px-4 sm:px-6 lg:px-8 text-xs text-stone-500 dark:text-neutral-400">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-8 border-b border-stone-100 dark:border-neutral-800">
+
+          {/* Brand & Author Info */}
           <div className="md:col-span-5 space-y-3">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-xl bg-black text-white flex items-center justify-center font-bold text-xs">
-                <span className="font-mono">TT</span>
+              <div className="w-7 h-7 rounded-lg bg-stone-900 dark:bg-white text-white dark:text-stone-900 flex items-center justify-center font-black text-xs">
+                TT
               </div>
-              <span className="font-bold text-black text-sm sm:text-base tracking-tight">
-                TikTrend BI
-              </span>
-              <span className="text-[9px] sm:text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-stone-100 text-stone-700">
-                THESIS RESEARCH
+              <span className="font-extrabold text-stone-900 dark:text-white text-base tracking-tight">
+                TikTrend
               </span>
             </div>
 
-            <p className="text-xs text-stone-600 leading-relaxed max-w-sm">
+            <p className="text-xs text-stone-600 dark:text-neutral-400 leading-relaxed max-w-sm">
               Platform Business Intelligence dan Predictive Machine Learning untuk analisis tren performa konten, probabilitas viralitas, dan peramalan engagement TikTok berbasis CRISP-DM framework.
             </p>
 
-            <div className="p-3 rounded-xl bg-stone-50 border border-stone-200/80 text-[10px] sm:text-[11px] text-stone-700 font-mono space-y-1">
-              <div className="font-bold text-black">Penulis Skripsi &amp; Pengembang :</div>
-              <div className="text-stone-900">Nico Revaldo Putra E.A, S.Kom</div>
-              <div className="text-stone-500">Program Studi S1 Sistem Informasi · STIKOM Surabaya</div>
+            <div className="p-3 rounded-lg bg-stone-50 dark:bg-neutral-900 border border-stone-200/80 dark:border-neutral-800 text-[10.5px] font-mono space-y-1">
+              <div className="font-bold text-stone-900 dark:text-white">Pengembang &amp; Riset :</div>
+              <div className="text-stone-800 dark:text-neutral-200">Nico Revaldo Putra E.A</div>
+              <div className="text-stone-400 dark:text-neutral-500">Program Studi S1 Sistem Komputer · ITBS Bali</div>
             </div>
           </div>
 
           {/* Modul Platform Column */}
           <div className="md:col-span-4 space-y-2.5">
-            <span className="font-mono text-[10px] font-bold text-black uppercase tracking-wider block mb-1">
+            <span className="font-mono text-[10px] font-bold text-stone-900 dark:text-white uppercase tracking-wider block mb-1">
               MODUL ANALITIK PLATFORM
             </span>
-            <ul className="space-y-1.5 text-xs text-stone-600">
+            <ul className="space-y-2 text-xs">
               <li>
-                <Link href="/dashboard" className="hover:text-black flex items-center gap-2 font-medium text-black">
+                <Link href="/dashboard" className="text-stone-900 dark:text-white font-bold hover:text-sky-600 dark:hover:text-sky-400 flex items-center gap-2">
                   <span>Global Analysis Dashboard</span>
-                  <span className="px-1.5 py-0.2 rounded text-[8px] bg-emerald-100 text-emerald-800 font-bold">Live</span>
                 </Link>
               </li>
               <li>
-                <Link href="/analytics" className="hover:text-black text-stone-600">
-                  Analytics &amp; LSTM Forecasting
+                <Link href="/analytics" className="text-stone-600 dark:text-neutral-400 hover:text-stone-900 dark:hover:text-white">
+                  Analytics &amp; PyTorch LSTM Forecasting
                 </Link>
               </li>
               <li>
-                <Link href="/video-library" className="hover:text-black text-stone-600">
-                  ML Predictive Intelligence (RF &amp; SVM)
+                <Link href="/video-library" className="text-stone-600 dark:text-neutral-400 hover:text-stone-900 dark:hover:text-white">
+                  ML Predictive Intelligence (Random Forest)
                 </Link>
               </li>
               <li>
-                <Link href="/nlp-insight" className="hover:text-black text-stone-600">
-                  NLP Transformer Summarization
+                <Link href="/nlp-insight" className="text-stone-600 dark:text-neutral-400 hover:text-stone-900 dark:hover:text-white">
+                  NLP Transformer Summarization (IndoBERT)
                 </Link>
               </li>
               <li>
-                <Link href="/hashtag" className="hover:text-black text-stone-600">
-                  Hashtag &amp; Keyword Discovery
-                </Link>
-              </li>
-              <li>
-                <Link href="/timeposting" className="hover:text-black text-stone-600">
-                  Posting Time Optimizer Heatmap
-                </Link>
-              </li>
-              <li>
-                <Link href="/analytics" className="hover:text-black text-stone-600">
-                  Export Dataset &amp; PDF Report
+                <Link href="/timeposting" className="text-stone-600 dark:text-neutral-400 hover:text-stone-900 dark:hover:text-white">
+                  Posting Time Heatmap Optimizer
                 </Link>
               </li>
             </ul>
@@ -80,27 +66,25 @@ export default function LandingFooter() {
 
           {/* Arsitektur Microservice Column */}
           <div className="md:col-span-3 space-y-2.5">
-            <span className="font-mono text-[10px] font-bold text-black uppercase tracking-wider block mb-1">
+            <span className="font-mono text-[10px] font-bold text-stone-900 dark:text-white uppercase tracking-wider block mb-1">
               ARSITEKTUR MICROSERVICE
             </span>
-            <ul className="space-y-1.5 text-xs text-stone-600">
-              <li><a href="#architecture" className="hover:text-black font-semibold text-black">Apache Airflow 3 (:8085)</a></li>
-              <li><a href="#architecture" className="hover:text-black">Aiven Cloud MySQL (:16095)</a></li>
-              <li><a href="#architecture" className="hover:text-black">FastAPI ML Engine (:8001)</a></li>
-              <li><a href="#architecture" className="hover:text-black">Spring Boot REST API (:8082)</a></li>
-              <li><a href="#architecture" className="hover:text-black">Next.js 16 Vercel Frontend</a></li>
-              <li><span className="text-stone-400">AWS EC2 (ap-southeast-1)</span></li>
+            <ul className="space-y-1.5 text-xs text-stone-600 dark:text-neutral-400 font-mono">
+              <li><a href="#architecture" className="hover:text-stone-900 dark:hover:text-white">Apache Airflow 3 Pipeline</a></li>
+              <li><a href="#architecture" className="hover:text-stone-900 dark:hover:text-white">Aiven Cloud MySQL Database</a></li>
+              <li><a href="#architecture" className="hover:text-stone-900 dark:hover:text-white">FastAPI ML Engine</a></li>
+              <li><a href="#architecture" className="hover:text-stone-900 dark:hover:text-white">Spring Boot REST API</a></li>
+              <li><a href="#architecture" className="hover:text-stone-900 dark:hover:text-white">Next.js 16 Vercel Frontend</a></li>
             </ul>
           </div>
 
         </div>
 
         {/* Bottom */}
-        <div className="pt-6 sm:pt-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-[10px] sm:text-[11px] text-stone-400 font-mono text-center sm:text-left">
-          <div>&copy; 2026 TikTrend BI · Thesis Research Project. All rights reserved.</div>
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6">
-            <span>AUTHOR: NICO REVALDO PUTRA E.A, S.KOM</span>
-            <span>SYSTEM v2.5.0</span>
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[10px] text-stone-400 dark:text-neutral-500 font-mono">
+          <div>&copy; 2026 TikTrend BI · Enterprise Intelligence HQ. All rights reserved.</div>
+          <div className="flex items-center gap-4">
+            <span>AUTHOR: NICO REVALDO PUTRA E.A</span>
           </div>
         </div>
 

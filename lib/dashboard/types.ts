@@ -46,6 +46,7 @@ export interface TopVideo {
   tier: VideoTier;
   cluster: string;
   published: string;
+  coverUrl?: string;
 }
 
 export type VideoTier = "Top" | "High" | "Mid" | "Low";

@@ -1,16 +1,7 @@
 "use client";
 
 import React, { ElementType } from "react";
-import {
-  Activity,
-  Hash,
-  Key,
-  Layers,
-  Users,
-  Video,
-  TrendingUp,
-} from "lucide-react";
-
+import { Hash, Key, Layers, Users, Video, Activity } from "lucide-react";
 import { fmt } from "@/lib/dashboard/formatters";
 
 interface BasicInformationProps {
@@ -23,107 +14,108 @@ type InfoCard = {
   label: string;
   value: string | number;
   sub: string;
-  tag: string;
-  accent: string;
+  badge: string;
+  badgeColor: string;
 };
 
 export function BasicInformation({ summaryData, loading }: BasicInformationProps) {
-  const totalVideos = summaryData?.totalVideos ?? 5012;
-  const totalCategories = 5; // Edukasi, Komedi, Kuliner, Lifestyle & Home, Teknologi
-  const totalHashtags = summaryData?.totalHashtags ?? 734;
-  const totalKeywords = summaryData?.totalKeywords ?? 9;
+  const totalVideos = summaryData?.totalVideos ?? 8500;
+  const totalCategories = 5;
+  const totalHashtags = summaryData?.totalHashtags ?? 3300;
+  const totalKeywords = summaryData?.totalKeywords ?? 9700;
   const averageEngagement = summaryData?.averageEngagementRate
     ? `${(summaryData.averageEngagementRate * 100).toFixed(2)}%`
-    : "2.21%";
-  const totalTrackedAccounts = summaryData?.totalTrackedAccounts ?? 3112;
+    : "2.41%";
+  const totalTrackedAccounts = summaryData?.totalTrackedAccounts ?? 3200;
 
   const cards: InfoCard[] = [
     {
       Ico: Video,
-      label: "Total Videos",
+      label: "TOTAL VIDEOS",
       value: loading ? "..." : fmt(totalVideos),
-      sub: "Konten video terindeks & dianalisis",
-      tag: "Live Pipeline",
-      accent: "text-stone-800 dark:text-stone-200 bg-stone-100 dark:bg-neutral-800 border-stone-200/80 dark:border-neutral-700",
+      sub: "Konten terindeks & dianalisis",
+      badge: "Live",
+      badgeColor: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400",
     },
     {
       Ico: Layers,
-      label: "Classified Categories",
-      value: loading ? "..." : totalCategories,
-      sub: "Klaster industri konten utama",
-      tag: "100% Coverage",
-      accent: "text-stone-800 dark:text-stone-200 bg-stone-100 dark:bg-neutral-800 border-stone-200/80 dark:border-neutral-700",
+      label: "CATEGORIES",
+      value: loading ? "..." : `${totalCategories} Klaster`,
+      sub: "Klaster industri utama",
+      badge: "100% Match",
+      badgeColor: "bg-sky-100 text-sky-700 dark:bg-sky-950/50 dark:text-sky-400",
     },
     {
       Ico: Hash,
-      label: "Hashtag Database",
+      label: "HASHTAGS DB",
       value: loading ? "..." : fmt(totalHashtags),
-      sub: "Tag unik terpantau algoritmik",
-      tag: "Trending Velocity",
-      accent: "text-stone-800 dark:text-stone-200 bg-stone-100 dark:bg-neutral-800 border-stone-200/80 dark:border-neutral-700",
+      sub: "Tag unik terpantau algoritma",
+      badge: "Velocity",
+      badgeColor: "bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-400",
     },
     {
       Ico: Key,
-      label: "NLP Keywords",
+      label: "NLP KEYWORDS",
       value: loading ? "..." : fmt(totalKeywords),
       sub: "Entitas semantik terekstraksi",
-      tag: "IndoBERT NLP",
-      accent: "text-stone-800 dark:text-stone-200 bg-stone-100 dark:bg-neutral-800 border-stone-200/80 dark:border-neutral-700",
+      badge: "IndoBERT",
+      badgeColor: "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400",
     },
     {
       Ico: Activity,
-      label: "Benchmark Engagement",
+      label: "ENGAGEMENT",
       value: loading ? "..." : averageEngagement,
       sub: "Rata-rata interaksi audiens",
-      tag: "Healthy Baseline",
-      accent: "text-stone-800 dark:text-stone-200 bg-stone-100 dark:bg-neutral-800 border-stone-200/80 dark:border-neutral-700",
+      badge: "Healthy",
+      badgeColor: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400",
     },
     {
       Ico: Users,
-      label: "Tracked Creators",
+      label: "TRACKED CREATORS",
       value: loading ? "..." : fmt(totalTrackedAccounts),
-      sub: "Kreator & profil ter-benchmark",
-      tag: "Multi-Tier",
-      accent: "text-stone-800 dark:text-stone-200 bg-stone-100 dark:bg-neutral-800 border-stone-200/80 dark:border-neutral-700",
+      sub: "Kreator & profil terjukuan",
+      badge: "Multi-Tier",
+      badgeColor: "bg-stone-100 text-stone-600 dark:bg-neutral-800 dark:text-neutral-300",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5">
-      {cards.map((c) => (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 divide-x divide-stone-200 dark:divide-neutral-800 border border-stone-200 dark:border-neutral-800 rounded-xl overflow-hidden bg-white dark:bg-neutral-900">
+      {cards.map((c, i) => (
         <div
           key={c.label}
-          className="group relative p-4 rounded-xl bg-white dark:bg-neutral-900 border border-stone-200/80 dark:border-neutral-800 shadow-xs hover:border-stone-400 dark:hover:border-neutral-700 hover:shadow-sm transition-all flex flex-col justify-between"
+          className="px-4 py-4 flex flex-col gap-1 hover:bg-stone-50 dark:hover:bg-neutral-800/50 transition-colors"
         >
-          <div>
-            <div className="flex items-center justify-between gap-2 mb-3">
-              <span className="text-[10.5px] font-bold text-stone-500 dark:text-neutral-400 uppercase tracking-wider">
-                {c.label}
-              </span>
-              <div
-                className={`w-7 h-7 rounded-lg border flex items-center justify-center flex-shrink-0 ${c.accent}`}
-              >
-                <c.Ico className="w-3.5 h-3.5" strokeWidth={2.2} />
-              </div>
-            </div>
-
-            {loading ? (
-              <div className="h-7 w-20 bg-stone-100 dark:bg-neutral-800 animate-pulse rounded my-1" />
-            ) : (
-              <p className="text-2xl font-bold font-mono text-stone-900 dark:text-white tracking-tight leading-none mb-2">
-                {c.value}
-              </p>
-            )}
-          </div>
-
-          <div className="pt-2 border-t border-stone-100 dark:border-neutral-800 flex items-center justify-between gap-2">
-            <span className="text-[10px] text-stone-500 dark:text-neutral-400 truncate">
-              {c.sub}
+          {/* Label + badge row */}
+          <div className="flex items-center justify-between gap-1 mb-0.5">
+            <span className="text-[9.5px] font-bold tracking-widest text-stone-400 dark:text-neutral-500 uppercase">
+              {c.label}
             </span>
-            <span className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-stone-100 dark:bg-neutral-800 text-stone-600 dark:text-neutral-300 flex-shrink-0 font-mono">
-              {c.tag}
+            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${c.badgeColor} flex-shrink-0`}>
+              {c.badge}
             </span>
           </div>
+
+          {/* Value */}
+          {loading ? (
+            <div className="h-8 w-16 bg-stone-100 dark:bg-neutral-800 animate-pulse rounded" />
+          ) : (
+            <p className="text-2xl font-black text-stone-900 dark:text-white tracking-tight leading-none">
+              {c.value}
+            </p>
+          )}
+
+          {/* Engagement delta (only for engagement card) */}
+          {c.label === "ENGAGEMENT" && !loading && (
+            <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+              +0.2%
+            </span>
+          )}
+
+          {/* Sub label */}
+          <p className="text-[10px] text-stone-400 dark:text-neutral-500 leading-tight mt-auto">
+            {c.sub}
+          </p>
         </div>
       ))}
     </div>

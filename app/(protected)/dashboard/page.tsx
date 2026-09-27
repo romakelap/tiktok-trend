@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Activity, Layers, Target } from "lucide-react";
 
 import { PageShell } from "@/components/layout/PageShell";
 import {
@@ -10,7 +9,6 @@ import {
   CategoryDetailEmpty,
   DashboardToolbar,
   BasicInformation,
-  SectionLabel,
   SectionNav,
   VideoDetailDrawer,
 } from "@/components/dashboard";
@@ -29,16 +27,13 @@ function periodToDays(period: PeriodKey): number {
 
 export default function DashboardPage() {
   const [period, setPeriod] = useState<PeriodKey>("30");
-  const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(
-    null
-  );
+  const [activeTab, setActiveTab] = useState<"overview" | "category" | "deepdive">("category");
+  const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(null);
   const [categoriesData, setCategoriesData] = useState<Category[]>(CATEGORIES);
   const [isLoading, setIsLoading] = useState(true);
   const [summaryData, setSummaryData] = useState<any>(null);
   const [isSummaryLoading, setIsSummaryLoading] = useState(true);
-  const [selectedVideoId, setSelectedVideoId] = useState<string | number | null>(
-    null
-  );
+  const [selectedVideoId, setSelectedVideoId] = useState<string | number | null>(null);
 
   const loadDashboardData = useCallback(async () => {
     setIsLoading(true);
@@ -50,12 +45,9 @@ export default function DashboardPage() {
       const [compRes, summaryRes] = await Promise.all([
         apiFetch<any>(API_ENDPOINTS.category.comparison).catch(() => null),
         apiFetch<any>(API_ENDPOINTS.dashboard.summary).catch(() => null),
-        apiFetch<any>(
-          `${API_ENDPOINTS.dashboard.engagementTrend}?days=${days}`
-        ).catch(() => null),
+        apiFetch<any>(`${API_ENDPOINTS.dashboard.engagementTrend}?days=${days}`).catch(() => null),
       ]);
 
-      // Category comparison → categoriesData
       if (compRes?.success && Array.isArray(compRes.data)) {
         const mapped = compRes.data
           .map((item: any) => {
@@ -76,9 +68,7 @@ export default function DashboardPage() {
               engagement: Number((item.avgEngagementRate * 100).toFixed(2)),
               viralProb: item.avgViralScore ?? 0,
               revenue: item.totalGmvLocal ?? 0,
-              topHashtags: item.topHashtag
-                ? [item.topHashtag]
-                : staticCat?.topHashtags || [],
+              topHashtags: item.topHashtag ? [item.topHashtag] : staticCat?.topHashtags || [],
               topKeywords: staticCat?.topKeywords || [],
               bestTime: item.bestTime || staticCat?.bestTime || "",
               insight: staticCat?.insight || "",
@@ -88,7 +78,6 @@ export default function DashboardPage() {
         if (mapped.length > 0) setCategoriesData(mapped as Category[]);
       }
 
-      // Dashboard summary
       if (summaryRes?.success) setSummaryData(summaryRes.data);
     } catch (err) {
       console.error("Failed to load dashboard data:", err);
@@ -117,36 +106,52 @@ export default function DashboardPage() {
 
   const periodLabel = PERIOD_LABELS[period];
 
+  // Last refresh time
+  const now = new Date();
+  const refreshTime = now.toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+
   return (
     <PageShell title="Global Analysis">
       <DashboardToolbar
         period={period}
         onPeriodChange={setPeriod}
         onRefresh={loadDashboardData}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
       />
-      <SectionNav />
 
-      <div
-        className="p-6 space-y-8"
-        style={{ fontFamily: "'DM Sans',sans-serif" }}
-      >
-        {/* ── 1. Global Info KPIs ── */}
-        <section id="kpi" className="scroll-mt-36">
-          <SectionLabel
-            icon={Activity}
-            title="Global Ecosystem Overview"
-            subtitle={`Agregasi database TikTok BI · Periode: ${periodLabel}`}
-          />
-          <BasicInformation summaryData={summaryData} loading={isSummaryLoading} />
-        </section>
+      <div className="p-6 space-y-5">
 
-        {/* ── 2. Category Performance Matrix (Dual-Axis) ── */}
-        <section id="category" className="scroll-mt-36">
-          <SectionLabel
-            icon={Layers}
-            title="Sector Performance Matrix (Reach, Content & Virality)"
-            subtitle="Kombinasi grafik Batang (Total Views) serta Garis (Total Konten, Engagement Rate, dan Peluang Viral)"
-          />
+        {/* ── Page Title + streaming badge ── */}
+        <div id="kpi" className="scroll-mt-20 flex items-start justify-between">
+          <div>
+            <div className="flex items-center gap-2.5 mb-1">
+              <h1 className="text-xl font-black text-stone-900 dark:text-white tracking-tight">
+                Performa Lintas Kategori
+              </h1>
+              <span className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700 rounded">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
+                STREAMING ENGINE LIVE
+              </span>
+            </div>
+            <p className="text-xs text-stone-400 dark:text-neutral-500">
+              Analisis benchmark viralitas, volume impressions, dan efisiensi interaksi TikTok Regional
+            </p>
+          </div>
+          <span className="text-[11px] font-mono text-stone-400 dark:text-neutral-500 flex-shrink-0 mt-1">
+            LAST_REFRESH {refreshTime} WIB
+          </span>
+        </div>
+
+        {/* ── KPI Cards ── */}
+        <BasicInformation summaryData={summaryData} loading={isSummaryLoading} />
+
+        {/* ── Category Performance Matrix ── */}
+        <section id="category" className="scroll-mt-20">
           <CategoryComparison
             onSelectCategory={handleSelectCategory}
             selectedCategory={selectedCategory}
@@ -154,20 +159,13 @@ export default function DashboardPage() {
           />
         </section>
 
-        {/* ── 3. Category Deep Dive (on demand) ── */}
-        <section id="category-detail" className="scroll-mt-36">
+        {/* ── Category Deep Dive ── */}
+        <section id="category-detail" className="scroll-mt-20">
           {selectedCategoryData ? (
-            <>
-              <SectionLabel
-                icon={Target}
-                title="Category Deep Dive Analysis"
-                subtitle={`Eksplorasi mendalam performa: ${selectedCategoryData.label}`}
-              />
-              <CategoryDetail
-                category={selectedCategoryData}
-                onClose={() => setSelectedCategory(null)}
-              />
-            </>
+            <CategoryDetail
+              category={selectedCategoryData}
+              onClose={() => setSelectedCategory(null)}
+            />
           ) : (
             <CategoryDetailEmpty />
           )}

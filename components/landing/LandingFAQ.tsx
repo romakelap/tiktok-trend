@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { HelpCircle, ChevronDown, CheckCircle2 } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 export default function LandingFAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
@@ -20,75 +20,58 @@ export default function LandingFAQ() {
     },
     {
       q: "Berapa banyak kategori konten TikTok yang didukung oleh dashboard?",
-      a: "Sistem mendukung 29 kategori konten TikTok yang diklasifikasikan menggunakan pipeline TF-IDF + Classifier. Pada dashboard visualisasi, sistem menyoroti 5 kategori utama: Edukasi & Tutorial, Komedi & Hiburan, Kuliner & Resep, Lifestyle & Home, serta Teknologi & Gadget untuk studi kasus akun @podomorogarden.",
+      a: "Sistem mendukung 29 kategori konten TikTok yang diklasifikasikan menggunakan pipeline TF-IDF + Classifier. Pada dashboard visualisasi, sistem menyoroti 5 kategori utama: Edukasi & Tutorial, Komedi & Hiburan, Kuliner & Resep, Lifestyle & Home, serta Teknologi & Gadget.",
       tag: "KATEGORI KONTEN",
     },
     {
       q: "Bagaimana arsitektur deployment microservice berjalan?",
-      a: "Arsitektur backend di-host pada AWS EC2 (Singapore region) yang menjalankan Spring Boot REST API di port :8082, FastAPI ML inference di port :8001, dan Apache Airflow di port :8080/8085. Basis data relasional menggunakan Aiven Cloud MySQL terkelola, sedangkan frontend Next.js 16 dideploy secara serverless di Vercel dengan proteksi proxy reverse-rewrites.",
+      a: "Arsitektur backend di-host pada AWS EC2 (Singapore region) yang menjalankan Spring Boot REST API, FastAPI ML inference, dan Apache Airflow. Basis data relasional menggunakan Aiven Cloud MySQL terkelola, sedangkan frontend Next.js 16 dideploy secara serverless di Vercel.",
       tag: "INFRASTRUKTUR",
     },
   ];
 
   return (
-    <section id="faq" className="py-16 sm:py-24 lg:py-28 px-4 sm:px-6 lg:px-8 bg-white border-t border-stone-100">
+    <section id="faq" className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-stone-50/60 dark:bg-neutral-950 border-t border-stone-200/80 dark:border-neutral-800">
       <div className="max-w-4xl mx-auto">
-        
         {/* Section Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 35 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.2 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="text-center mb-12 sm:mb-16"
-        >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-stone-100 border border-stone-200 text-stone-700 text-xs font-semibold mb-4">
-            <HelpCircle size={13} />
-            <span>Pertanyaan Umum (FAQ)</span>
-          </div>
-
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-black tracking-tight leading-[1.15] mb-4">
-            Pertanyaan Seputar Riset &amp; Platform.
+        <div className="max-w-3xl mb-12">
+          <h2 className="text-2xl sm:text-4xl font-black text-stone-900 dark:text-white tracking-tight">
+            Pertanyaan Umum &amp; Metodologi Sistem
           </h2>
-
-          <p className="text-sm sm:text-base lg:text-lg text-stone-600 font-normal leading-relaxed">
+          <p className="text-xs sm:text-sm text-stone-500 dark:text-neutral-400 mt-2 leading-relaxed">
             Penjelasan teknis terkait sumber data, validasi model machine learning, dan arsitektur sistem.
           </p>
-        </motion.div>
+        </div>
 
-        {/* FAQ Accordion List */}
-        <div className="space-y-3 sm:space-y-4 text-left">
+        {/* FAQ List */}
+        <div className="space-y-3 text-left">
           {faqs.map((faq, idx) => {
             const isOpen = openIndex === idx;
             return (
-              <motion.div
+              <div
                 key={faq.q}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.2 }}
-                transition={{ duration: 0.4, delay: idx * 0.08, ease: "easeOut" }}
-                className="rounded-2xl border border-stone-200 bg-stone-50/70 overflow-hidden transition-colors"
+                className="rounded-xl border border-stone-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 overflow-hidden transition-all shadow-xs"
               >
                 <button
                   type="button"
                   onClick={() => setOpenIndex(isOpen ? null : idx)}
-                  className="w-full p-5 sm:p-6 text-left flex items-start justify-between gap-4 cursor-pointer focus:outline-none"
+                  className="w-full p-4 sm:p-5 text-left flex items-start justify-between gap-4 cursor-pointer focus:outline-none"
                 >
                   <div>
-                    <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-stone-200 text-stone-700 block w-fit mb-2">
+                    <span className="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded bg-stone-100 dark:bg-neutral-800 text-stone-600 dark:text-neutral-400 border border-stone-200 dark:border-neutral-700 inline-block mb-2">
                       {faq.tag}
                     </span>
-                    <h3 className="text-sm sm:text-base font-bold text-black tracking-tight">
+                    <h3 className="text-sm font-bold text-stone-900 dark:text-white tracking-tight">
                       {faq.q}
                     </h3>
                   </div>
 
                   <div
-                    className={`w-7 h-7 rounded-lg bg-white border border-stone-200 flex items-center justify-center text-stone-600 shrink-0 mt-1 transition-transform duration-200 ${
-                      isOpen ? "rotate-180 bg-black text-white" : ""
+                    className={`w-6 h-6 rounded flex items-center justify-center text-stone-400 shrink-0 mt-1 transition-transform duration-200 ${
+                      isOpen ? "rotate-180 text-stone-900 dark:text-white" : ""
                     }`}
                   >
-                    <ChevronDown size={15} />
+                    <ChevronDown className="w-4 h-4" />
                   </div>
                 </button>
 
@@ -98,18 +81,17 @@ export default function LandingFAQ() {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.25, ease: "easeInOut" }}
-                      className="px-5 sm:px-6 pb-5 sm:pb-6 text-xs sm:text-sm text-stone-600 leading-relaxed border-t border-stone-200/60 pt-4"
+                      transition={{ duration: 0.2 }}
+                      className="px-4 sm:px-5 pb-5 pt-0 text-xs text-stone-600 dark:text-neutral-400 leading-relaxed border-t border-stone-100 dark:border-neutral-800/80"
                     >
-                      {faq.a}
+                      <p className="pt-3">{faq.a}</p>
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </motion.div>
+              </div>
             );
           })}
         </div>
-
       </div>
     </section>
   );
